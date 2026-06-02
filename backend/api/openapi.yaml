@@ -1,0 +1,311 @@
+openapi: "3.0.3"
+info:
+  title: Design YouTube API
+  version: "1.0.0"
+  description: Backend API for a YouTube-like video platform (portfolio project)
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+security: []
+
+components:
+  securitySchemes:
+    UploadSecret:
+      type: apiKey
+      in: header
+      name: X-Upload-Secret
+      description: Shared secret required for all upload endpoints
+
+  schemas:
+    UploadInitRequest:
+      type: object
+      required: [title, description, fileSize, totalChunks]
+      properties:
+        videoId:
+          type: string
+          description: Omit for new uploads; provide to resume an existing upload
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        fileSize:
+          type: integer
+          format: int64
+          description: Total file size in bytes. Must be ≤ 104857600 (100MB)
+          maximum: 104857600
+        totalChunks:
+          type: integer
+          description: Total number of chunks the client will upload
+
+    ChunkStatus:
+      type: object
+      required: [partNumber, uploaded]
+      properties:
+        partNumber:
+          type: integer
+        uploaded:
+          type: boolean
+        eTag:
+          type: string
+          description: ETag returned by S3 after the part was uploaded; empty if not yet uploaded
+
+    UploadInitResponse:
+      type: object
+      required: [videoId, uploadId, nextPartNumber, presignedUrl, chunks]
+      properties:
+        videoId:
+          type: string
+        uploadId:
+          type: string
+          description: S3 multipart upload ID
+        nextPartNumber:
+          type: integer
+          description: Part number for which the presignedUrl is issued
+        presignedUrl:
+          type: string
+          description: S3 presigned PUT URL for the next chunk
+        chunks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChunkStatus"
+
+    ConfirmChunkRequest:
+      type: object
+      required: [partNumber, eTag]
+      properties:
+        partNumber:
+          type: integer
+        eTag:
+          type: string
+
+    ConfirmChunkResponse:
+      type: object
+      required: [partNumber, done]
+      properties:
+        partNumber:
+          type: integer
+          description: The part number that was just confirmed
+        done:
+          type: boolean
+          description: True when this was the last chunk
+        nextPartNumber:
+          type: integer
+          description: Present only when done is false
+        presignedUrl:
+          type: string
+          description: Presigned PUT URL for the next part; absent when done is true
+
+    CompleteUploadRequest:
+      type: object
+      required: [uploadId]
+      properties:
+        uploadId:
+          type: string
+
+    VideoStatus:
+      type: string
+      enum: [uploading, processing, ready, failed]
+
+    VideoSummary:
+      type: object
+      required: [videoId, title, thumbnailUrl, uploadedAt, status]
+      properties:
+        videoId:
+          type: string
+        title:
+          type: string
+        thumbnailUrl:
+          type: string
+        uploadedAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/VideoStatus"
+
+    VideoDetail:
+      type: object
+      required: [videoId, title, description, status, uploadedAt]
+      properties:
+        videoId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/VideoStatus"
+        uploadedAt:
+          type: string
+          format: date-time
+        manifestUrl:
+          type: string
+          description: CloudFront HLS master manifest URL; present only when status is ready
+        thumbnailUrl:
+          type: string
+          description: CloudFront thumbnail URL; present only when status is ready
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+paths:
+  /videos:
+    get:
+      operationId: GetVideos
+      summary: List all ready videos
+      tags: [catalog]
+      responses:
+        "200":
+          description: Array of video summaries ordered newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VideoSummary"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /videos/{videoId}:
+    get:
+      operationId: GetVideo
+      summary: Get video metadata
+      tags: [catalog]
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Video metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoDetail"
+        "404":
+          description: Video not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /videos/upload/init:
+    post:
+      operationId: InitUpload
+      summary: Initiate or resume a multipart upload
+      tags: [upload]
+      security:
+        - UploadSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadInitRequest"
+      responses:
+        "200":
+          description: Upload initiated or resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadInitResponse"
+        "400":
+          description: Invalid request (e.g. file too large)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid upload secret
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /videos/{videoId}/upload/confirm-chunk:
+    post:
+      operationId: ConfirmChunk
+      summary: Confirm a successfully uploaded chunk and get the next presigned URL
+      tags: [upload]
+      security:
+        - UploadSecret: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmChunkRequest"
+      responses:
+        "200":
+          description: Chunk confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfirmChunkResponse"
+        "401":
+          description: Missing or invalid upload secret
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Video not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /videos/{videoId}/upload/complete:
+    post:
+      operationId: CompleteUpload
+      summary: Finalise the multipart upload
+      tags: [upload]
+      security:
+        - UploadSecret: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteUploadRequest"
+      responses:
+        "200":
+          description: Upload completed, processing started
+        "401":
+          description: Missing or invalid upload secret
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Video not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
