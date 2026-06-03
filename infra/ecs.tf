@@ -65,6 +65,7 @@ resource "aws_ecs_task_definition" "api" {
       { name = "CLOUDFRONT_DOMAIN", value = aws_cloudfront_distribution.video.domain_name },
       { name = "SQS_QUEUE_URL", value = aws_sqs_queue.video_processing.url },
       { name = "REDIS_ADDR", value = "${aws_elasticache_cluster.redis.cache_nodes[0].address}:6379" },
+      { name = "RESULTS_QUEUE_URL", value = aws_sqs_queue.video_processing_results.url },
     ]
     secrets = [{
       name      = "UPLOAD_SECRET"
@@ -96,10 +97,10 @@ resource "aws_ecs_task_definition" "worker" {
     essential = true
     environment = [
       { name = "AWS_REGION", value = var.aws_region },
-      { name = "DYNAMODB_TABLE", value = aws_dynamodb_table.videos.name },
       { name = "S3_BUCKET", value = aws_s3_bucket.video.bucket },
       { name = "CLOUDFRONT_DOMAIN", value = aws_cloudfront_distribution.video.domain_name },
       { name = "SQS_QUEUE_URL", value = aws_sqs_queue.video_processing.url },
+      { name = "RESULTS_QUEUE_URL", value = aws_sqs_queue.video_processing_results.url },
     ]
     logConfiguration = {
       logDriver = "awslogs"

@@ -60,6 +60,15 @@ resource "aws_iam_role_policy" "api_task" {
         Action = ["s3:PutObject", "s3:GetObject"]
         Resource = ["${aws_s3_bucket.video.arn}/raw/*"]
       },
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:ChangeMessageVisibility",
+        ]
+        Resource = [aws_sqs_queue.video_processing_results.arn]
+      },
     ]
   })
 }
@@ -75,14 +84,6 @@ resource "aws_iam_role_policy" "worker_task" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:GetItem",
-          "dynamodb:UpdateItem",
-        ]
-        Resource = [aws_dynamodb_table.videos.arn]
-      },
       {
         Effect = "Allow"
         Action = ["s3:GetObject"]
@@ -105,6 +106,11 @@ resource "aws_iam_role_policy" "worker_task" {
           "sqs:ChangeMessageVisibility",
         ]
         Resource = [aws_sqs_queue.video_processing.arn]
+      },
+      {
+        Effect  = "Allow"
+        Action  = ["sqs:SendMessage"]
+        Resource = [aws_sqs_queue.video_processing_results.arn]
       },
     ]
   })

@@ -3,7 +3,7 @@ version: "3.9"
 services:
   api:
     build:
-      context: ./backend
+      context: ./backend/api
       dockerfile: Dockerfile.api
     ports:
       - "8080:8080"
@@ -14,6 +14,7 @@ services:
       S3_BUCKET: design-youtube-video-prod
       CLOUDFRONT_DOMAIN: localhost
       SQS_QUEUE_URL: http://localstack:4566/000000000000/video-processing.fifo
+      RESULTS_QUEUE_URL: http://localstack:4566/000000000000/video-processing-results.fifo
       REDIS_ADDR: redis:6379
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
@@ -24,16 +25,14 @@ services:
 
   worker:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.worker
+      context: ./backend/worker
+      dockerfile: Dockerfile
     environment:
-      UPLOAD_SECRET: devsecret
       AWS_REGION: us-east-1
-      DYNAMODB_TABLE: videos
       S3_BUCKET: design-youtube-video-prod
       CLOUDFRONT_DOMAIN: localhost
       SQS_QUEUE_URL: http://localstack:4566/000000000000/video-processing.fifo
-      REDIS_ADDR: redis:6379
+      RESULTS_QUEUE_URL: http://localstack:4566/000000000000/video-processing-results.fifo
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_ENDPOINT_URL: http://localstack:4566

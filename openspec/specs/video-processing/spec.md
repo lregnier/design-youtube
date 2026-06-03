@@ -20,7 +20,7 @@ The worker SHALL use ffmpeg to split the raw video into 6-second HLS segments at
 
 #### Scenario: Corrupt or unreadable video
 - **WHEN** ffmpeg cannot decode the video file
-- **THEN** the worker updates the video status to `failed` in DynamoDB and deletes the SQS message
+- **THEN** the worker emits a `VideoFailed` integration event to the results queue and deletes the SQS processing message
 
 ### Requirement: Worker generates an HLS master manifest
 After all segments are uploaded, the worker SHALL generate an HLS master playlist (`.m3u8`) referencing the three quality-level media playlists. The manifest SHALL be uploaded to S3 under `manifests/{videoId}/master.m3u8` and served via CloudFront.
@@ -37,11 +37,11 @@ The worker SHALL use ffmpeg to extract a single JPEG frame from the video's midp
 - **THEN** a JPEG thumbnail is present at the CloudFront thumbnail URL
 
 ### Requirement: Worker updates video metadata on completion
-After all pipeline steps succeed, the worker SHALL update the DynamoDB video record with: status `ready`, the CloudFront manifest URL, and the CloudFront thumbnail URL.
+After all pipeline steps succeed, the worker SHALL emit a `VideoProcessed` integration event to `video-processing-results.fifo` containing the CloudFront manifest URL and thumbnail URL. The worker SHALL NOT write to DynamoDB.
 
 #### Scenario: Metadata updated after successful processing
 - **WHEN** the full processing DAG completes without error
-- **THEN** the video record in DynamoDB has status `ready`, a valid manifest URL, and a valid thumbnail URL
+- **THEN** a `VideoProcessed` event is on the results queue with valid manifestUrl and thumbnailUrl; no DynamoDB write occurs
 
 ### Requirement: Failed jobs are retried via SQS
 If the worker crashes or returns an error without deleting the SQS message, SQS SHALL redeliver the message after the visibility timeout expires. The worker SHALL be idempotent — re-running the pipeline for the same videoId SHALL produce the same output without duplicating S3 objects.

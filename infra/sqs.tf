@@ -1,3 +1,14 @@
+resource "aws_sqs_queue" "video_processing_results" {
+  name                        = "video-processing-results.fifo"
+  fifo_queue                  = true
+  content_based_deduplication = true
+  visibility_timeout_seconds  = 900
+
+  tags = {
+    Name = "video-processing-results"
+  }
+}
+
 resource "aws_sqs_queue" "video_processing" {
   name                        = "video-processing.fifo"
   fifo_queue                  = true
