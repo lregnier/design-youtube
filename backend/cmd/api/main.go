@@ -2,17 +2,24 @@ package main
 
 import (
 	"context"
-	"crypto/subtle"
 	"log"
-	"net/http"
+	nethttp "net/http"
 
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/redis/go-redis/v9"
 
+	httpadapter "github.com/lregnier/design-youtube/backend/internal/adapters/inbound/http"
+	"github.com/lregnier/design-youtube/backend/internal/adapters/outbound/dynamo"
+	"github.com/lregnier/design-youtube/backend/internal/adapters/outbound/rediscache"
+	"github.com/lregnier/design-youtube/backend/internal/adapters/outbound/s3store"
 	"github.com/lregnier/design-youtube/backend/internal/api"
+	"github.com/lregnier/design-youtube/backend/internal/application/catalog"
+	"github.com/lregnier/design-youtube/backend/internal/application/upload"
 	"github.com/lregnier/design-youtube/backend/internal/config"
-	"github.com/lregnier/design-youtube/backend/internal/handler"
-	"github.com/lregnier/design-youtube/backend/internal/store"
 )
 
 func main() {
@@ -21,57 +28,38 @@ func main() {
 		log.Fatalf("config: %v", err)
 	}
 
-	db, err := store.New(cfg)
+	awsCfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+		awsconfig.WithRegion(cfg.AWSRegion),
+	)
 	if err != nil {
-		log.Fatalf("store: %v", err)
+		log.Fatalf("aws config: %v", err)
 	}
 
-	h := handler.New(cfg, db)
+	// Outbound adapters
+	repo := dynamo.NewRepository(dynamodb.NewFromConfig(awsCfg), cfg.DynamoDBTable)
+	store := s3store.NewStore(awss3.NewFromConfig(awsCfg), cfg.S3Bucket)
+	cache := rediscache.NewCache(redis.NewClient(&redis.Options{Addr: cfg.RedisAddr}))
 
-	secretMw := uploadSecretMiddleware(cfg.UploadSecret)
+	// Use cases
+	initUC := upload.NewInitUpload(repo, store, cfg.S3Bucket)
+	confirmUC := upload.NewConfirmChunk(repo, store)
+	completeUC := upload.NewCompleteUpload(repo, store)
+	getVideoUC := catalog.NewGetVideo(repo, cache)
+	listVideosUC := catalog.NewListVideos(repo)
+
+	// Inbound adapter
+	h := httpadapter.NewHandler(initUC, confirmUC, completeUC, getVideoUC, listVideosUC)
+	secretMw := httpadapter.UploadSecretMiddleware(cfg.UploadSecret)
 	strictHandler := api.NewStrictHandlerWithOptions(h, []api.StrictMiddlewareFunc{secretMw}, api.StrictHTTPServerOptions{})
 
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
-
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
+	r.Get("/health", func(w nethttp.ResponseWriter, r *nethttp.Request) { w.WriteHeader(nethttp.StatusOK) })
 	api.HandlerFromMux(strictHandler, r)
 
 	log.Println("listening on :8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	if err := nethttp.ListenAndServe(":8080", r); err != nil {
 		log.Fatalf("server: %v", err)
-	}
-}
-
-var uploadOps = map[string]bool{
-	"InitUpload":     true,
-	"ConfirmChunk":   true,
-	"CompleteUpload": true,
-}
-
-func uploadSecretMiddleware(secret string) api.StrictMiddlewareFunc {
-	const msg = "missing or invalid upload secret"
-	return func(f api.StrictHandlerFunc, operationID string) api.StrictHandlerFunc {
-		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, req any) (any, error) {
-			if !uploadOps[operationID] {
-				return f(ctx, w, r, req)
-			}
-			provided := r.Header.Get("X-Upload-Secret")
-			if subtle.ConstantTimeCompare([]byte(provided), []byte(secret)) != 1 {
-				switch operationID {
-				case "InitUpload":
-					return api.InitUpload401JSONResponse{Error: msg}, nil
-				case "ConfirmChunk":
-					return api.ConfirmChunk401JSONResponse{Error: msg}, nil
-				case "CompleteUpload":
-					return api.CompleteUpload401JSONResponse{Error: msg}, nil
-				}
-			}
-			return f(ctx, w, r, req)
-		}
 	}
 }
