@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate:api": "openapi-typescript ../backend/api/openapi.yaml -o src/api/types.gen.ts"
+    "generate:api": "openapi-typescript ../../backend/api/api/openapi.yaml -o src/api/types.gen.ts"
   },
   "dependencies": {
     "hls.js": "^1.6.16",

@@ -41,7 +41,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend/web
     ports:
       - "3000:80"
 
