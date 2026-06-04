@@ -12,7 +12,7 @@ type VideoStorage interface {
 type Transcoder interface {
 	Duration(ctx context.Context, inputPath string) (float64, error)
 	TranscodeHLS(ctx context.Context, inputPath, outputDir, scale, bitrate string) error
-	ExtractThumbnail(ctx context.Context, inputPath, outputPath string, offset float64) error
+	ExtractThumbnail(ctx context.Context, inputPath string, offset float64) ([]byte, error)
 }
 
 type ResultPublisher interface {

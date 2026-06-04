@@ -3,6 +3,7 @@ package ffmpeg
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -49,15 +50,26 @@ func (t *Transcoder) TranscodeHLS(_ context.Context, inputPath, outputDir, scale
 	return nil
 }
 
-func (t *Transcoder) ExtractThumbnail(_ context.Context, inputPath, outputPath string, offset float64) error {
+func (t *Transcoder) ExtractThumbnail(_ context.Context, inputPath string, offset float64) ([]byte, error) {
+	tmp, err := os.CreateTemp("", "thumb-*.jpg")
+	if err != nil {
+		return nil, fmt.Errorf("temp file: %w", err)
+	}
+	defer os.Remove(tmp.Name())
+	defer tmp.Close()
+
 	out, err := exec.Command("ffmpeg",
 		"-ss", fmt.Sprintf("%.2f", offset),
 		"-i", inputPath,
 		"-frames:v", "1", "-q:v", "2",
-		"-y", outputPath,
+		"-y", tmp.Name(),
 	).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("ffmpeg thumbnail: %w\n%s", err, out)
+		return nil, fmt.Errorf("ffmpeg thumbnail: %w\n%s", err, out)
 	}
-	return nil
+	data, err := os.ReadFile(tmp.Name())
+	if err != nil {
+		return nil, fmt.Errorf("read thumbnail: %w", err)
+	}
+	return data, nil
 }

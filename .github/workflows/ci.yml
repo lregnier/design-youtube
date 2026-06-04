@@ -7,7 +7,7 @@ on:
 
 jobs:
   api:
-    name: API — lint & build
+    name: API — lint, build & test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -20,9 +20,10 @@ jobs:
           cache-dependency-path: backend/api/go.sum
       - run: go vet ./...
       - run: go build ./...
+      - run: go test ./...
 
   worker:
-    name: Worker — lint & build
+    name: Worker — lint, build & test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -35,6 +36,7 @@ jobs:
           cache-dependency-path: backend/worker/go.sum
       - run: go vet ./...
       - run: go build ./...
+      - run: go test ./...
 
   frontend:
     name: Frontend — typecheck & build

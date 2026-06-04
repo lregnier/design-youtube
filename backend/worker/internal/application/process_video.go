@@ -74,11 +74,10 @@ func (uc ProcessVideo) Execute(ctx context.Context, job processing.ProcessingJob
 	}
 
 	var thumbnailURL string
-	thumbPath := tmpDir + "/thumb.jpg"
-	if err := uc.transcoder.ExtractThumbnail(ctx, rawPath, thumbPath, duration/2); err != nil {
+	if thumbData, err := uc.transcoder.ExtractThumbnail(ctx, rawPath, duration/2); err != nil {
 		log.Printf("thumbnail extraction failed (non-fatal): %v", err)
-	} else if data, err := os.ReadFile(thumbPath); err == nil {
-		thumbnailURL, _ = uc.storage.UploadThumbnail(ctx, job.VideoID, data)
+	} else {
+		thumbnailURL, _ = uc.storage.UploadThumbnail(ctx, job.VideoID, thumbData)
 	}
 
 	if err := uc.publisher.PublishProcessed(ctx, job.VideoID, manifestURL, thumbnailURL); err != nil {

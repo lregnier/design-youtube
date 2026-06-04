@@ -4,9 +4,9 @@ backend/*.exe
 backend/tmp/
 
 # Node / frontend
-frontend/node_modules/
-frontend/dist/
-frontend/.env.local
+frontend/web/node_modules/
+frontend/web/dist/
+frontend/web/.env.local
 
 # Terraform
 infra/.terraform/
