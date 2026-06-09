@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	nethttp "net/http"
+	"strings"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -41,7 +42,11 @@ func main() {
 
 	// Outbound adapters
 	repo := dynamo.NewRepository(dynamodb.NewFromConfig(awsCfg), cfg.DynamoDBTable)
-	store := s3store.NewStore(awss3.NewFromConfig(awsCfg), cfg.S3Bucket)
+	s3Opts := []func(*awss3.Options){}
+	if cfg.S3UsePathStyle {
+		s3Opts = append(s3Opts, func(o *awss3.Options) { o.UsePathStyle = true })
+	}
+	store := s3store.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket)
 	cache := rediscache.NewCache(redis.NewClient(&redis.Options{Addr: cfg.RedisAddr}))
 	sqsClient := sqs.NewFromConfig(awsCfg)
 
@@ -65,7 +70,7 @@ func main() {
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"*"},
+		AllowedOrigins: strings.Split(cfg.CORSAllowedOrigins, ","),
 		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders: []string{"Content-Type", "X-Upload-Secret"},
 	}))

@@ -3,40 +3,47 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type Config struct {
-	UploadSecret     string
-	AWSRegion        string
-	DynamoDBTable    string
-	S3Bucket         string
-	CloudFrontDomain string
-	SQSQueueURL      string
-	ResultsQueueURL  string
-	RedisAddr        string
+	UploadSecret       string
+	AWSRegion          string
+	DynamoDBTable      string
+	S3Bucket           string
+	CloudFrontDomain   string
+	SQSQueueURL        string
+	ResultsQueueURL    string
+	RedisAddr          string
+	S3UsePathStyle     bool
+	CORSAllowedOrigins string
 }
 
 func Load() (*Config, error) {
+	s3UsePathStyle, _ := strconv.ParseBool(os.Getenv("S3_USE_PATH_STYLE"))
 	c := &Config{
-		UploadSecret:     os.Getenv("UPLOAD_SECRET"),
-		AWSRegion:        os.Getenv("AWS_REGION"),
-		DynamoDBTable:    os.Getenv("DYNAMODB_TABLE"),
-		S3Bucket:         os.Getenv("S3_BUCKET"),
-		CloudFrontDomain: os.Getenv("CLOUDFRONT_DOMAIN"),
-		SQSQueueURL:      os.Getenv("SQS_QUEUE_URL"),
-		ResultsQueueURL:  os.Getenv("RESULTS_QUEUE_URL"),
-		RedisAddr:        os.Getenv("REDIS_ADDR"),
+		UploadSecret:       os.Getenv("UPLOAD_SECRET"),
+		AWSRegion:          os.Getenv("AWS_REGION"),
+		DynamoDBTable:      os.Getenv("DYNAMODB_TABLE"),
+		S3Bucket:           os.Getenv("S3_BUCKET"),
+		CloudFrontDomain:   os.Getenv("CLOUDFRONT_DOMAIN"),
+		SQSQueueURL:        os.Getenv("SQS_QUEUE_URL"),
+		ResultsQueueURL:    os.Getenv("RESULTS_QUEUE_URL"),
+		RedisAddr:          os.Getenv("REDIS_ADDR"),
+		S3UsePathStyle:     s3UsePathStyle,
+		CORSAllowedOrigins: os.Getenv("CORS_ALLOWED_ORIGINS"),
 	}
 
 	required := map[string]string{
-		"UPLOAD_SECRET":     c.UploadSecret,
-		"AWS_REGION":        c.AWSRegion,
-		"DYNAMODB_TABLE":    c.DynamoDBTable,
-		"S3_BUCKET":         c.S3Bucket,
-		"CLOUDFRONT_DOMAIN": c.CloudFrontDomain,
-		"SQS_QUEUE_URL":     c.SQSQueueURL,
-		"RESULTS_QUEUE_URL": c.ResultsQueueURL,
-		"REDIS_ADDR":        c.RedisAddr,
+		"UPLOAD_SECRET":        c.UploadSecret,
+		"AWS_REGION":           c.AWSRegion,
+		"DYNAMODB_TABLE":       c.DynamoDBTable,
+		"S3_BUCKET":            c.S3Bucket,
+		"CLOUDFRONT_DOMAIN":    c.CloudFrontDomain,
+		"SQS_QUEUE_URL":        c.SQSQueueURL,
+		"RESULTS_QUEUE_URL":    c.ResultsQueueURL,
+		"REDIS_ADDR":           c.RedisAddr,
+		"CORS_ALLOWED_ORIGINS": c.CORSAllowedOrigins,
 	}
 
 	for name, val := range required {
