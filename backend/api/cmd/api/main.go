@@ -46,7 +46,7 @@ func main() {
 	if cfg.S3UsePathStyle {
 		s3Opts = append(s3Opts, func(o *awss3.Options) { o.UsePathStyle = true })
 	}
-	store := s3store.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket)
+	store := s3store.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, cfg.S3PublicEndpointURL)
 	cache := rediscache.NewCache(redis.NewClient(&redis.Options{Addr: cfg.RedisAddr}))
 	sqsClient := sqs.NewFromConfig(awsCfg)
 

@@ -14,9 +14,10 @@ type Config struct {
 	CloudFrontDomain   string
 	SQSQueueURL        string
 	ResultsQueueURL    string
-	RedisAddr          string
-	S3UsePathStyle     bool
-	CORSAllowedOrigins string
+	RedisAddr           string
+	S3PublicEndpointURL string
+	S3UsePathStyle      bool
+	CORSAllowedOrigins  string
 }
 
 func Load() (*Config, error) {
@@ -29,9 +30,10 @@ func Load() (*Config, error) {
 		CloudFrontDomain:   os.Getenv("CLOUDFRONT_DOMAIN"),
 		SQSQueueURL:        os.Getenv("SQS_QUEUE_URL"),
 		ResultsQueueURL:    os.Getenv("RESULTS_QUEUE_URL"),
-		RedisAddr:          os.Getenv("REDIS_ADDR"),
-		S3UsePathStyle:     s3UsePathStyle,
-		CORSAllowedOrigins: os.Getenv("CORS_ALLOWED_ORIGINS"),
+		RedisAddr:           os.Getenv("REDIS_ADDR"),
+		S3PublicEndpointURL: os.Getenv("S3_PUBLIC_ENDPOINT_URL"),
+		S3UsePathStyle:      s3UsePathStyle,
+		CORSAllowedOrigins:  os.Getenv("CORS_ALLOWED_ORIGINS"),
 	}
 
 	required := map[string]string{
