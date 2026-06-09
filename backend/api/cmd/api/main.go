@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/redis/go-redis/v9"
 
 	httpadapter "github.com/lregnier/design-youtube/api/internal/adapters/inbound/http"
@@ -63,6 +64,11 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders: []string{"Content-Type", "X-Upload-Secret"},
+	}))
 	r.Get("/health", func(w nethttp.ResponseWriter, r *nethttp.Request) { w.WriteHeader(nethttp.StatusOK) })
 	api.HandlerFromMux(strictHandler, r)
 
