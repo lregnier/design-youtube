@@ -9,14 +9,14 @@ frontend/web/dist/
 frontend/web/.env.local
 
 # Terraform
-infra/.terraform/
-infra/.terraform.lock.hcl
-infra/*.tfstate
-infra/*.tfstate.backup
-infra/*.tfvars
-infra/*.tfbackend
-infra/override.tf
-infra/override.tf.json
+infra/aws/.terraform/
+infra/aws/.terraform.lock.hcl
+infra/aws/*.tfstate
+infra/aws/*.tfstate.backup
+infra/aws/*.tfvars
+infra/aws/*.tfbackend
+infra/aws/override.tf
+infra/aws/override.tf.json
 
 # AI agent workspaces (tool-specific, not part of the project)
 .claude/
