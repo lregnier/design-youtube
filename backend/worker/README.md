@@ -74,6 +74,7 @@ sequenceDiagram
 | `RESULTS_QUEUE_URL` | SQS URL to publish results to |
 | `AWS_ENDPOINT_URL` | Override AWS endpoint (LocalStack in dev) |
 | `S3_USE_PATH_STYLE` | Use path-style S3 addressing (`true` for LocalStack, unset/`false` in production) |
+| `S3_PUBLIC_ENDPOINT_URL` | Publish `manifestUrl`/`thumbnailUrl` as path-style URLs against this endpoint (browser-accessible LocalStack URL); unset in production to use `CLOUDFRONT_DOMAIN` |
 
 ## Development
 

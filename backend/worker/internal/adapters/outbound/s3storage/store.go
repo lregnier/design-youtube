@@ -16,13 +16,21 @@ import (
 var _ ports.VideoStorage = (*Store)(nil)
 
 type Store struct {
-	client           *awss3.Client
-	bucket           string
-	cloudfrontDomain string
+	client              *awss3.Client
+	bucket              string
+	cloudfrontDomain    string
+	s3PublicEndpointURL string
 }
 
-func NewStore(client *awss3.Client, bucket, cloudfrontDomain string) *Store {
-	return &Store{client: client, bucket: bucket, cloudfrontDomain: cloudfrontDomain}
+func NewStore(client *awss3.Client, bucket, cloudfrontDomain, s3PublicEndpointURL string) *Store {
+	return &Store{client: client, bucket: bucket, cloudfrontDomain: cloudfrontDomain, s3PublicEndpointURL: s3PublicEndpointURL}
+}
+
+func (s *Store) assetURL(key string) string {
+	if s.s3PublicEndpointURL != "" {
+		return fmt.Sprintf("%s/%s/%s", s.s3PublicEndpointURL, s.bucket, key)
+	}
+	return fmt.Sprintf("https://%s/%s", s.cloudfrontDomain, key)
 }
 
 func (s *Store) DownloadRaw(ctx context.Context, videoID, destPath string) error {
@@ -74,7 +82,7 @@ func (s *Store) UploadManifest(ctx context.Context, videoID string, content []by
 	if err := s.putObject(ctx, key, content, "application/x-mpegURL"); err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("https://%s/%s", s.cloudfrontDomain, key), nil
+	return s.assetURL(key), nil
 }
 
 func (s *Store) UploadThumbnail(ctx context.Context, videoID string, data []byte) (string, error) {
@@ -82,7 +90,7 @@ func (s *Store) UploadThumbnail(ctx context.Context, videoID string, data []byte
 	if err := s.putObject(ctx, key, data, "image/jpeg"); err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("https://%s/%s", s.cloudfrontDomain, key), nil
+	return s.assetURL(key), nil
 }
 
 func (s *Store) putObject(ctx context.Context, key string, data []byte, contentType string) error {

@@ -34,7 +34,7 @@ func main() {
 	if cfg.S3UsePathStyle {
 		s3Opts = append(s3Opts, func(o *awss3.Options) { o.UsePathStyle = true })
 	}
-	store := s3storage.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, cfg.CloudFrontDomain)
+	store := s3storage.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, cfg.CloudFrontDomain, cfg.S3PublicEndpointURL)
 	transcoder := ffmpeg.NewTranscoder()
 	publisher := sqspublisher.NewPublisher(sqs.NewFromConfig(awsCfg), cfg.ResultsQueueURL)
 
