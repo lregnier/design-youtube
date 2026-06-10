@@ -73,6 +73,7 @@ sequenceDiagram
 | `SQS_QUEUE_URL` | SQS URL to poll for processing jobs |
 | `RESULTS_QUEUE_URL` | SQS URL to publish results to |
 | `AWS_ENDPOINT_URL` | Override AWS endpoint (LocalStack in dev) |
+| `S3_USE_PATH_STYLE` | Use path-style S3 addressing (`true` for LocalStack, unset/`false` in production) |
 
 ## Development
 

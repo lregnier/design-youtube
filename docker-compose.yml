@@ -41,6 +41,7 @@ services:
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_ENDPOINT_URL: http://localstack:4566
+      S3_USE_PATH_STYLE: "true"
     depends_on:
       localstack:
         condition: service_healthy

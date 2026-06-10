@@ -30,7 +30,11 @@ func main() {
 	}
 
 	// Outbound adapters
-	store := s3storage.NewStore(awss3.NewFromConfig(awsCfg), cfg.S3Bucket, cfg.CloudFrontDomain)
+	s3Opts := []func(*awss3.Options){}
+	if cfg.S3UsePathStyle {
+		s3Opts = append(s3Opts, func(o *awss3.Options) { o.UsePathStyle = true })
+	}
+	store := s3storage.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, cfg.CloudFrontDomain)
 	transcoder := ffmpeg.NewTranscoder()
 	publisher := sqspublisher.NewPublisher(sqs.NewFromConfig(awsCfg), cfg.ResultsQueueURL)
 

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type Config struct {
@@ -11,15 +12,18 @@ type Config struct {
 	CloudFrontDomain string
 	SQSQueueURL      string
 	ResultsQueueURL  string
+	S3UsePathStyle   bool
 }
 
 func Load() (*Config, error) {
+	s3UsePathStyle, _ := strconv.ParseBool(os.Getenv("S3_USE_PATH_STYLE"))
 	c := &Config{
 		AWSRegion:        os.Getenv("AWS_REGION"),
 		S3Bucket:         os.Getenv("S3_BUCKET"),
 		CloudFrontDomain: os.Getenv("CLOUDFRONT_DOMAIN"),
 		SQSQueueURL:      os.Getenv("SQS_QUEUE_URL"),
 		ResultsQueueURL:  os.Getenv("RESULTS_QUEUE_URL"),
+		S3UsePathStyle:   s3UsePathStyle,
 	}
 
 	required := map[string]string{
