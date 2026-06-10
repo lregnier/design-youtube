@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
@@ -78,28 +77,7 @@ type rawJob struct {
 	S3Key   string `json:"s3Key"`
 }
 
-type s3Notification struct {
-	Records []struct {
-		S3 struct {
-			Object struct {
-				Key string `json:"key"`
-			} `json:"object"`
-		} `json:"s3"`
-	} `json:"Records"`
-}
-
 func parseJob(body *string) (processing.ProcessingJob, error) {
-	// Try S3 event notification format first
-	var notif s3Notification
-	if err := json.Unmarshal([]byte(*body), &notif); err == nil && len(notif.Records) > 0 {
-		s3Key := notif.Records[0].S3.Object.Key
-		parts := strings.Split(s3Key, "/")
-		if len(parts) >= 2 {
-			return processing.ProcessingJob{VideoID: parts[1], S3Key: s3Key}, nil
-		}
-	}
-
-	// Fall back to raw job JSON
 	var j rawJob
 	if err := json.Unmarshal([]byte(*body), &j); err != nil {
 		return processing.ProcessingJob{}, err

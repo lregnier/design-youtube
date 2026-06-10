@@ -1,11 +1,7 @@
 ## ADDED Requirements
 
-### Requirement: S3 upload completion triggers processing
-When S3 receives a CompleteMultipartUpload event for the raw video prefix, it SHALL publish a notification to the SQS processing queue. The processing worker SHALL poll the queue and pick up the event to begin the processing DAG.
-
-#### Scenario: Upload completion enqueues processing job
-- **WHEN** S3 receives a CompleteMultipartUpload for a raw video object
-- **THEN** an SQS message containing the videoId and S3 key is placed on the processing queue
+### Requirement: Worker polls the processing queue for jobs
+The processing worker SHALL poll the `video-processing.fifo` SQS queue and begin the processing DAG for each job message it receives.
 
 #### Scenario: Worker picks up the job
 - **WHEN** the ECS Fargate worker polls SQS and receives a message

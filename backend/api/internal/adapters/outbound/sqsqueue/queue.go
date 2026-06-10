@@ -19,10 +19,12 @@ func NewQueue(client *sqs.Client, queueURL string) *Queue {
 	return &Queue{client: client, queueURL: queueURL}
 }
 
-func (q *Queue) DeleteMessage(ctx context.Context, receiptHandle string) error {
-	_, err := q.client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
-		QueueUrl:      &q.queueURL,
-		ReceiptHandle: &receiptHandle,
+func (q *Queue) SendMessage(ctx context.Context, body, messageGroupID string) error {
+	_, err := q.client.SendMessage(ctx, &sqs.SendMessageInput{
+		QueueUrl:               &q.queueURL,
+		MessageBody:            &body,
+		MessageGroupId:         &messageGroupID,
+		MessageDeduplicationId: &messageGroupID,
 	})
 	return err
 }

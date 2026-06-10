@@ -30,11 +30,15 @@ The backend SHALL expose `POST /videos/{videoId}/upload/confirm-chunk`. The requ
 - **THEN** the server marks all chunks uploaded and returns no next presigned URL
 
 ### Requirement: Client completes the multipart upload
-The backend SHALL expose `POST /videos/{videoId}/upload/complete` (protected by upload secret). The backend SHALL call S3 CompleteMultipartUpload with all collected ETags. On success, the video metadata status SHALL be updated to `processing`.
+The backend SHALL expose `POST /videos/{videoId}/upload/complete` (protected by upload secret). The backend SHALL call S3 CompleteMultipartUpload with all collected ETags. On success, the backend SHALL publish a processing job message to the video-processing FIFO queue and update the video metadata status to `processing`.
 
 #### Scenario: Successful completion
 - **WHEN** a client posts to complete with all chunk ETags collected
-- **THEN** S3 assembles the file, the backend updates status to `processing`, and returns 200
+- **THEN** S3 assembles the file, the backend enqueues a processing job, updates the video status to `processing`, and returns 200
+
+#### Scenario: Queue dispatch fails
+- **WHEN** S3 CompleteMultipartUpload succeeds but the SQS SendMessage call fails
+- **THEN** the backend returns an error to the client; the video status may be `processing` in the store but no job is in the queue
 
 ### Requirement: Upload is resumable
 If a client calls `POST /videos/upload/init` with an existing `videoId` that has status `uploading`, the backend SHALL return the current chunk status and a presigned URL for the first not-yet-uploaded chunk, allowing the client to resume without re-uploading completed chunks.

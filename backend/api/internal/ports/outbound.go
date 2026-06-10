@@ -32,5 +32,5 @@ type Cache interface {
 }
 
 type Queue interface {
-	DeleteMessage(ctx context.Context, receiptHandle string) error
+	SendMessage(ctx context.Context, body, messageGroupID string) error
 }

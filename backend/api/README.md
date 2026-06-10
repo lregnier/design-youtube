@@ -23,6 +23,7 @@ graph LR
         DynDB["DynamoDB\n(VideoRepository)"]
         S3["S3\n(ObjectStore)"]
         Redis["Redis\n(Cache)"]
+        SQSOut["SQS\n(Queue, processing jobs)"]
     end
 
     HTTP --> Upload
@@ -31,6 +32,7 @@ graph LR
 
     Upload --> DynDB
     Upload --> S3
+    Upload --> SQSOut
     Catalog --> DynDB
     Catalog --> Redis
     Processing --> DynDB
@@ -64,6 +66,7 @@ sequenceDiagram
     participant C as Client
     participant API as API
     participant S3 as Object Store
+    participant Q as SQS (video-processing)
 
     C->>API: POST /videos/upload/init
     API->>S3: CreateMultipartUpload
@@ -81,7 +84,8 @@ sequenceDiagram
     C->>API: POST /videos/{id}/upload/complete
     API->>S3: CompleteMultipartUpload
     API->>API: Update status → processing
-    Note over S3,API: Object store fires event → queue → worker picks up
+    API->>Q: SendMessage {videoId, s3Key}
+    Note over Q: Worker polls and picks up the job
 ```
 
 ## Get / Stream Video Flow
@@ -140,6 +144,9 @@ stateDiagram-v2
 | `RESULTS_QUEUE_URL` | SQS URL for consuming processing results |
 | `REDIS_ADDR` | Redis address (`host:port`) |
 | `AWS_ENDPOINT_URL` | Override AWS endpoint (LocalStack in dev) |
+| `S3_USE_PATH_STYLE` | Use path-style S3 addressing (`true` for LocalStack, unset/`false` in production) |
+| `S3_PUBLIC_ENDPOINT_URL` | Rewrite presigned URL host to this endpoint (browser-accessible LocalStack URL) |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins for upload endpoints |
 
 ## Development
 

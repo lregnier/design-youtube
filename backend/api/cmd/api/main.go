@@ -20,6 +20,7 @@ import (
 	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/dynamo"
 	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/rediscache"
 	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/s3store"
+	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/sqsqueue"
 	"github.com/lregnier/design-youtube/api/internal/api"
 	"github.com/lregnier/design-youtube/api/internal/application/catalog"
 	"github.com/lregnier/design-youtube/api/internal/application/processing"
@@ -49,11 +50,12 @@ func main() {
 	store := s3store.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, cfg.S3PublicEndpointURL)
 	cache := rediscache.NewCache(redis.NewClient(&redis.Options{Addr: cfg.RedisAddr}))
 	sqsClient := sqs.NewFromConfig(awsCfg)
+	processingQueue := sqsqueue.NewQueue(sqsClient, cfg.SQSQueueURL)
 
 	// Use cases
 	initUC := upload.NewInitUpload(repo, store, cfg.S3Bucket)
 	confirmUC := upload.NewConfirmChunk(repo, store)
-	completeUC := upload.NewCompleteUpload(repo, store)
+	completeUC := upload.NewCompleteUpload(repo, store, processingQueue)
 	getVideoUC := catalog.NewGetVideo(repo, cache)
 	listVideosUC := catalog.NewListVideos(repo)
 	applyResultUC := processing.NewApplyProcessingResult(repo)

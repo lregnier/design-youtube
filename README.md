@@ -14,16 +14,15 @@ graph TD
     ObjectStore["Object Store\n(raw uploads + HLS segments)"]
     Queue1["Message Queue\nvideo-processing"]
     Queue2["Message Queue\nvideo-processing-results"]
-    Cache["Cache\n(presigned URL store)"]
+    Cache["Cache\n(video metadata)"]
     CDN["CDN\n(HLS delivery)"]
     DB["Database\n(video metadata)"]
 
     Client -- "REST" --> API
     Client -- "presigned PUT (chunk)" --> ObjectStore
     API -- "read / write" --> DB
-    API -- "cache presigned URLs" --> Cache
+    API -- "cache video metadata" --> Cache
     API -- "enqueue job" --> Queue1
-    ObjectStore -- "upload-complete event" --> Queue1
     Queue1 -- "poll" --> Worker
     Worker -- "download raw / upload HLS" --> ObjectStore
     Worker -- "publish result" --> Queue2

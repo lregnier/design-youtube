@@ -2,6 +2,7 @@ package upload
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -17,10 +18,16 @@ type CompleteUploadCommand struct {
 type CompleteUpload struct {
 	repo  video.VideoRepository
 	store ports.ObjectStore
+	queue ports.Queue
 }
 
-func NewCompleteUpload(repo video.VideoRepository, store ports.ObjectStore) CompleteUpload {
-	return CompleteUpload{repo: repo, store: store}
+func NewCompleteUpload(repo video.VideoRepository, store ports.ObjectStore, queue ports.Queue) CompleteUpload {
+	return CompleteUpload{repo: repo, store: store, queue: queue}
+}
+
+type processingJob struct {
+	VideoID string `json:"videoId"`
+	S3Key   string `json:"s3Key"`
 }
 
 func (uc CompleteUpload) Execute(ctx context.Context, cmd CompleteUploadCommand) error {
@@ -45,5 +52,17 @@ func (uc CompleteUpload) Execute(ctx context.Context, cmd CompleteUploadCommand)
 	}
 
 	vid.MarkProcessing()
-	return uc.repo.Save(ctx, vid)
+	if err := uc.repo.Save(ctx, vid); err != nil {
+		return err
+	}
+
+	job, err := json.Marshal(processingJob{VideoID: string(vid.ID), S3Key: key})
+	if err != nil {
+		return fmt.Errorf("marshal processing job: %w", err)
+	}
+	if err := uc.queue.SendMessage(ctx, string(job), string(vid.ID)); err != nil {
+		return fmt.Errorf("send processing job: %w", err)
+	}
+
+	return nil
 }
