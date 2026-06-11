@@ -93,7 +93,7 @@ func buildMasterManifest(videoID string, qs []struct{ name, scale, bitrate strin
 	res := map[string]string{"1080p": "1920x1080", "720p": "1280x720", "360p": "640x360"}
 	s := "#EXTM3U\n"
 	for _, q := range qs {
-		s += fmt.Sprintf("#EXT-X-STREAM-INF:BANDWIDTH=%d,RESOLUTION=%s\nsegments/%s/%s/media.m3u8\n",
+		s += fmt.Sprintf("#EXT-X-STREAM-INF:BANDWIDTH=%d,RESOLUTION=%s\n../../segments/%s/%s/media.m3u8\n",
 			bw[q.name], res[q.name], videoID, q.name)
 	}
 	return s
