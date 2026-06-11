@@ -57,7 +57,7 @@ Requires `X-Upload-Secret` header on all upload endpoints.
 | `POST` | `/videos/{videoId}/upload/confirm-chunk` | Confirm a chunk and receive the next presigned URL |
 | `POST` | `/videos/{videoId}/upload/complete` | Finalise the multipart upload |
 
-Full spec: [`api/openapi.yaml`](api/openapi.yaml)
+Full spec: [`openapi/openapi.yaml`](openapi/openapi.yaml)
 
 ## Upload Flow
 
@@ -163,10 +163,10 @@ Run tests:
 go test ./...
 ```
 
-Regenerate OpenAPI server code after editing `api/openapi.yaml`:
+Regenerate OpenAPI server code after editing `openapi/openapi.yaml`:
 
 ```bash
-go generate ./api/...
+go generate ./openapi/...
 ```
 
 Regenerate mocks after changing port interfaces:
