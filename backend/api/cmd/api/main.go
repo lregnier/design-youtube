@@ -3,16 +3,12 @@ package main
 import (
 	"context"
 	"log"
-	nethttp "net/http"
 	"strings"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/go-chi/chi/v5"
-	chimw "github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
 	"github.com/redis/go-redis/v9"
 
 	httpadapter "github.com/lregnier/design-youtube/api/internal/adapters/inbound/http"
@@ -21,7 +17,6 @@ import (
 	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/rediscache"
 	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/s3store"
 	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/sqsqueue"
-	"github.com/lregnier/design-youtube/api/internal/api"
 	"github.com/lregnier/design-youtube/api/internal/application/catalog"
 	"github.com/lregnier/design-youtube/api/internal/application/processing"
 	"github.com/lregnier/design-youtube/api/internal/application/upload"
@@ -62,25 +57,12 @@ func main() {
 
 	// Inbound adapters
 	h := httpadapter.NewHandler(initUC, confirmUC, completeUC, getVideoUC, listVideosUC)
-	secretMw := httpadapter.UploadSecretMiddleware(cfg.UploadSecret)
-	strictHandler := api.NewStrictHandlerWithOptions(h, []api.StrictMiddlewareFunc{secretMw}, api.StrictHTTPServerOptions{})
+	srv := httpadapter.NewServer(h, cfg.UploadSecret, strings.Split(cfg.CORSAllowedOrigins, ","), cfg.HTTPAddr)
 
 	consumer := sqsconsumer.NewConsumer(sqsClient, cfg.ResultsQueueURL, applyResultUC)
 	go consumer.Start(context.Background())
 
-	r := chi.NewRouter()
-	r.Use(chimw.Logger)
-	r.Use(chimw.Recoverer)
-	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: strings.Split(cfg.CORSAllowedOrigins, ","),
-		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
-		AllowedHeaders: []string{"Content-Type", "X-Upload-Secret"},
-	}))
-	r.Get("/health", func(w nethttp.ResponseWriter, r *nethttp.Request) { w.WriteHeader(nethttp.StatusOK) })
-	api.HandlerFromMux(strictHandler, r)
-
-	log.Println("listening on :8080")
-	if err := nethttp.ListenAndServe(":8080", r); err != nil {
+	if err := srv.Start(); err != nil {
 		log.Fatalf("server: %v", err)
 	}
 }

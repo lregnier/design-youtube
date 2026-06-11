@@ -25,3 +25,14 @@ The API SHALL read the S3 path-style flag from the `S3_USE_PATH_STYLE` environme
 #### Scenario: Path-style disabled for production
 - **WHEN** `S3_USE_PATH_STYLE` is unset or `"false"`
 - **THEN** the S3 client uses virtual-hosted style (`https://bucket.s3.amazonaws.com/key`)
+
+### Requirement: HTTP listen address is configurable via environment variable
+The API SHALL read its HTTP listen address from the `HTTP_ADDR` environment variable. When set, the HTTP server SHALL listen on that address. When unset, the HTTP server SHALL listen on `:8080`.
+
+#### Scenario: Listen address configured
+- **WHEN** `HTTP_ADDR` is set to `:9090`
+- **THEN** the HTTP server listens on `:9090`
+
+#### Scenario: Listen address unset
+- **WHEN** `HTTP_ADDR` is unset
+- **THEN** the HTTP server listens on `:8080`
