@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/lregnier/design-youtube/api/internal/api"
 	"github.com/lregnier/design-youtube/api/internal/application/catalog"
 	"github.com/lregnier/design-youtube/api/internal/application/upload"
 	"github.com/lregnier/design-youtube/api/internal/domain/video"
-	"github.com/lregnier/design-youtube/api/internal/mocks"
+	"github.com/lregnier/design-youtube/api/internal/gen/api"
+	"github.com/lregnier/design-youtube/api/internal/gen/mocks"
 	"github.com/lregnier/design-youtube/api/internal/ports"
 )
 

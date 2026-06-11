@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/lregnier/design-youtube/api/internal/domain/video"
-	"github.com/lregnier/design-youtube/api/internal/mocks"
+	"github.com/lregnier/design-youtube/api/internal/gen/mocks"
 )
 
 func readyVideo() *video.Video {

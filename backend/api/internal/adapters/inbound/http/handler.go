@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/lregnier/design-youtube/api/internal/api"
 	"github.com/lregnier/design-youtube/api/internal/application/catalog"
 	"github.com/lregnier/design-youtube/api/internal/application/upload"
 	"github.com/lregnier/design-youtube/api/internal/domain/video"
+	"github.com/lregnier/design-youtube/api/internal/gen/api"
 )
 
 type Handler struct {
