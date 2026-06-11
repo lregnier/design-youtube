@@ -130,65 +130,6 @@ func (_c *MockObjectStore_CreateMultipartUpload_Call) RunAndReturn(run func(cont
 	return _c
 }
 
-// GetObject provides a mock function with given fields: ctx, key
-func (_m *MockObjectStore) GetObject(ctx context.Context, key string) ([]byte, error) {
-	ret := _m.Called(ctx, key)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetObject")
-	}
-
-	var r0 []byte
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]byte, error)); ok {
-		return rf(ctx, key)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []byte); ok {
-		r0 = rf(ctx, key)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, key)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// MockObjectStore_GetObject_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetObject'
-type MockObjectStore_GetObject_Call struct {
-	*mock.Call
-}
-
-// GetObject is a helper method to define mock.On call
-//   - ctx context.Context
-//   - key string
-func (_e *MockObjectStore_Expecter) GetObject(ctx interface{}, key interface{}) *MockObjectStore_GetObject_Call {
-	return &MockObjectStore_GetObject_Call{Call: _e.mock.On("GetObject", ctx, key)}
-}
-
-func (_c *MockObjectStore_GetObject_Call) Run(run func(ctx context.Context, key string)) *MockObjectStore_GetObject_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
-	})
-	return _c
-}
-
-func (_c *MockObjectStore_GetObject_Call) Return(_a0 []byte, _a1 error) *MockObjectStore_GetObject_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *MockObjectStore_GetObject_Call) RunAndReturn(run func(context.Context, string) ([]byte, error)) *MockObjectStore_GetObject_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // PresignUploadPart provides a mock function with given fields: ctx, key, uploadID, partNumber
 func (_m *MockObjectStore) PresignUploadPart(ctx context.Context, key string, uploadID string, partNumber int) (*ports.PresignedURL, error) {
 	ret := _m.Called(ctx, key, uploadID, partNumber)
@@ -246,55 +187,6 @@ func (_c *MockObjectStore_PresignUploadPart_Call) Return(_a0 *ports.PresignedURL
 }
 
 func (_c *MockObjectStore_PresignUploadPart_Call) RunAndReturn(run func(context.Context, string, string, int) (*ports.PresignedURL, error)) *MockObjectStore_PresignUploadPart_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// PutObject provides a mock function with given fields: ctx, key, data, contentType
-func (_m *MockObjectStore) PutObject(ctx context.Context, key string, data []byte, contentType string) error {
-	ret := _m.Called(ctx, key, data, contentType)
-
-	if len(ret) == 0 {
-		panic("no return value specified for PutObject")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, []byte, string) error); ok {
-		r0 = rf(ctx, key, data, contentType)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// MockObjectStore_PutObject_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PutObject'
-type MockObjectStore_PutObject_Call struct {
-	*mock.Call
-}
-
-// PutObject is a helper method to define mock.On call
-//   - ctx context.Context
-//   - key string
-//   - data []byte
-//   - contentType string
-func (_e *MockObjectStore_Expecter) PutObject(ctx interface{}, key interface{}, data interface{}, contentType interface{}) *MockObjectStore_PutObject_Call {
-	return &MockObjectStore_PutObject_Call{Call: _e.mock.On("PutObject", ctx, key, data, contentType)}
-}
-
-func (_c *MockObjectStore_PutObject_Call) Run(run func(ctx context.Context, key string, data []byte, contentType string)) *MockObjectStore_PutObject_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].([]byte), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *MockObjectStore_PutObject_Call) Return(_a0 error) *MockObjectStore_PutObject_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *MockObjectStore_PutObject_Call) RunAndReturn(run func(context.Context, string, []byte, string) error) *MockObjectStore_PutObject_Call {
 	_c.Call.Return(run)
 	return _c
 }

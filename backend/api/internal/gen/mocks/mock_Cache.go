@@ -21,53 +21,6 @@ func (_m *MockCache) EXPECT() *MockCache_Expecter {
 	return &MockCache_Expecter{mock: &_m.Mock}
 }
 
-// Delete provides a mock function with given fields: ctx, key
-func (_m *MockCache) Delete(ctx context.Context, key string) error {
-	ret := _m.Called(ctx, key)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Delete")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, key)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// MockCache_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
-type MockCache_Delete_Call struct {
-	*mock.Call
-}
-
-// Delete is a helper method to define mock.On call
-//   - ctx context.Context
-//   - key string
-func (_e *MockCache_Expecter) Delete(ctx interface{}, key interface{}) *MockCache_Delete_Call {
-	return &MockCache_Delete_Call{Call: _e.mock.On("Delete", ctx, key)}
-}
-
-func (_c *MockCache_Delete_Call) Run(run func(ctx context.Context, key string)) *MockCache_Delete_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
-	})
-	return _c
-}
-
-func (_c *MockCache_Delete_Call) Return(_a0 error) *MockCache_Delete_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *MockCache_Delete_Call) RunAndReturn(run func(context.Context, string) error) *MockCache_Delete_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // Get provides a mock function with given fields: ctx, key
 func (_m *MockCache) Get(ctx context.Context, key string) ([]byte, error) {
 	ret := _m.Called(ctx, key)

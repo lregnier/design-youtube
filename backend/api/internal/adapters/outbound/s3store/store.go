@@ -1,10 +1,8 @@
 package s3store
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/url"
 	"time"
 
@@ -89,26 +87,4 @@ func (s *Store) CompleteMultipartUpload(ctx context.Context, key, uploadID strin
 		},
 	})
 	return err
-}
-
-func (s *Store) PutObject(ctx context.Context, key string, data []byte, contentType string) error {
-	_, err := s.client.PutObject(ctx, &awss3.PutObjectInput{
-		Bucket:      &s.bucket,
-		Key:         &key,
-		Body:        bytes.NewReader(data),
-		ContentType: &contentType,
-	})
-	return err
-}
-
-func (s *Store) GetObject(ctx context.Context, key string) ([]byte, error) {
-	out, err := s.client.GetObject(ctx, &awss3.GetObjectInput{
-		Bucket: &s.bucket,
-		Key:    &key,
-	})
-	if err != nil {
-		return nil, err
-	}
-	defer out.Body.Close()
-	return io.ReadAll(out.Body)
 }
