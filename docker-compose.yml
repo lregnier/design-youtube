@@ -66,7 +66,7 @@ services:
       SERVICES: s3,sqs,dynamodb
       DEFAULT_REGION: us-east-1
     volumes:
-      - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/localstack-init.sh
+      - ./docker/localstack-init.sh:/etc/localstack/init/ready.d/localstack-init.sh
     healthcheck:
       test: ["CMD", "awslocal", "sqs", "list-queues"]
       interval: 5s
