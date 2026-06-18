@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
-echo ">>> creating S3 bucket"
-awslocal s3 mb s3://design-youtube-video-prod
+if awslocal s3api head-bucket --bucket design-youtube-video-prod 2>/dev/null; then
+  echo ">>> S3 bucket already exists, skipping creation"
+else
+  echo ">>> creating S3 bucket"
+  awslocal s3 mb s3://design-youtube-video-prod
+fi
 
 echo ">>> configuring S3 bucket CORS"
 awslocal s3api put-bucket-cors \
@@ -17,23 +21,27 @@ awslocal s3api put-bucket-cors \
     }]
   }'
 
-echo ">>> creating DynamoDB table"
-awslocal dynamodb create-table \
-  --table-name videos \
-  --attribute-definitions \
-    AttributeName=videoId,AttributeType=S \
-    AttributeName=status,AttributeType=S \
-    AttributeName=uploadedAt,AttributeType=S \
-  --key-schema AttributeName=videoId,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST \
-  --global-secondary-indexes '[{
-    "IndexName": "status-uploadedAt-index",
-    "KeySchema": [
-      {"AttributeName": "status", "KeyType": "HASH"},
-      {"AttributeName": "uploadedAt", "KeyType": "RANGE"}
-    ],
-    "Projection": {"ProjectionType": "ALL"}
-  }]'
+if awslocal dynamodb describe-table --table-name videos 2>/dev/null; then
+  echo ">>> DynamoDB table already exists, skipping creation"
+else
+  echo ">>> creating DynamoDB table"
+  awslocal dynamodb create-table \
+    --table-name videos \
+    --attribute-definitions \
+      AttributeName=videoId,AttributeType=S \
+      AttributeName=status,AttributeType=S \
+      AttributeName=uploadedAt,AttributeType=S \
+    --key-schema AttributeName=videoId,KeyType=HASH \
+    --billing-mode PAY_PER_REQUEST \
+    --global-secondary-indexes '[{
+      "IndexName": "status-uploadedAt-index",
+      "KeySchema": [
+        {"AttributeName": "status", "KeyType": "HASH"},
+        {"AttributeName": "uploadedAt", "KeyType": "RANGE"}
+      ],
+      "Projection": {"ProjectionType": "ALL"}
+    }]'
+fi
 
 echo ">>> creating SQS queues"
 awslocal sqs create-queue \
