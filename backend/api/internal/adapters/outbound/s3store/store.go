@@ -3,7 +3,6 @@ package s3store
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,13 +15,13 @@ import (
 var _ ports.ObjectStore = (*Store)(nil)
 
 type Store struct {
-	client              *awss3.Client
-	bucket              string
-	s3PublicEndpointURL string
+	client      *awss3.Client
+	bucket      string
+	transformer PresignedURLTransformer
 }
 
-func NewStore(client *awss3.Client, bucket, s3PublicEndpointURL string) *Store {
-	return &Store{client: client, bucket: bucket, s3PublicEndpointURL: s3PublicEndpointURL}
+func NewStore(client *awss3.Client, bucket string, transformer PresignedURLTransformer) *Store {
+	return &Store{client: client, bucket: bucket, transformer: transformer}
 }
 
 func (s *Store) CreateMultipartUpload(ctx context.Context, key string) (*ports.MultipartUpload, error) {
@@ -48,25 +47,8 @@ func (s *Store) PresignUploadPart(ctx context.Context, key, uploadID string, par
 	if err != nil {
 		return nil, fmt.Errorf("presign part %d: %w", partNumber, err)
 	}
-	presignedURL := out.URL
-	if s.s3PublicEndpointURL != "" {
-		presignedURL = rewriteHost(presignedURL, s.s3PublicEndpointURL)
-	}
+	presignedURL := s.transformer.Transform(out.URL)
 	return &ports.PresignedURL{URL: presignedURL, PartNumber: partNumber}, nil
-}
-
-func rewriteHost(presignedURL, publicEndpoint string) string {
-	pub, err := url.Parse(publicEndpoint)
-	if err != nil {
-		return presignedURL
-	}
-	parsed, err := url.Parse(presignedURL)
-	if err != nil {
-		return presignedURL
-	}
-	parsed.Scheme = pub.Scheme
-	parsed.Host = pub.Host
-	return parsed.String()
 }
 
 func (s *Store) CompleteMultipartUpload(ctx context.Context, key, uploadID string, parts []ports.CompletedPart) error {

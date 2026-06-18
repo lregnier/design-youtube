@@ -16,21 +16,17 @@ import (
 var _ ports.VideoStorage = (*Store)(nil)
 
 type Store struct {
-	client              *awss3.Client
-	bucket              string
-	cloudfrontDomain    string
-	s3PublicEndpointURL string
+	client     *awss3.Client
+	bucket     string
+	urlBuilder PublicURLBuilder
 }
 
-func NewStore(client *awss3.Client, bucket, cloudfrontDomain, s3PublicEndpointURL string) *Store {
-	return &Store{client: client, bucket: bucket, cloudfrontDomain: cloudfrontDomain, s3PublicEndpointURL: s3PublicEndpointURL}
+func NewStore(client *awss3.Client, bucket string, urlBuilder PublicURLBuilder) *Store {
+	return &Store{client: client, bucket: bucket, urlBuilder: urlBuilder}
 }
 
 func (s *Store) assetURL(key string) string {
-	if s.s3PublicEndpointURL != "" {
-		return fmt.Sprintf("%s/%s/%s", s.s3PublicEndpointURL, s.bucket, key)
-	}
-	return fmt.Sprintf("https://%s/%s", s.cloudfrontDomain, key)
+	return s.urlBuilder.AssetURL(s.bucket, key)
 }
 
 func (s *Store) DownloadRaw(ctx context.Context, videoID, destPath string) error {

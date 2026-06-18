@@ -42,7 +42,11 @@ func main() {
 	if cfg.S3UsePathStyle {
 		s3Opts = append(s3Opts, func(o *awss3.Options) { o.UsePathStyle = true })
 	}
-	store := s3store.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, cfg.S3PublicEndpointURL)
+	var transformer s3store.PresignedURLTransformer = s3store.NoOpTransformer{}
+	if cfg.S3PublicEndpointURL != "" {
+		transformer = s3store.NewLocalStackTransformer(cfg.S3PublicEndpointURL)
+	}
+	store := s3store.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, transformer)
 	cache := rediscache.NewCache(redis.NewClient(&redis.Options{Addr: cfg.RedisAddr}))
 	sqsClient := sqs.NewFromConfig(awsCfg)
 	processingQueue := sqsqueue.NewQueue(sqsClient, cfg.SQSQueueURL)
