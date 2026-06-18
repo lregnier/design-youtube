@@ -14,14 +14,16 @@ type Config struct {
 	CloudFrontDomain   string
 	SQSQueueURL        string
 	ResultsQueueURL    string
-	RedisAddr           string
-	S3PublicEndpointURL string
-	S3UsePathStyle      bool
-	CORSAllowedOrigins  string
-	HTTPAddr            string
+	RedisAddr          string
+	LocalStackEnabled  bool
+	LocalStackEndpoint string
+	S3UsePathStyle     bool
+	CORSAllowedOrigins string
+	HTTPAddr           string
 }
 
 func Load() (*Config, error) {
+	localStack, _ := strconv.ParseBool(os.Getenv("LOCALSTACK_ENABLED"))
 	s3UsePathStyle, _ := strconv.ParseBool(os.Getenv("S3_USE_PATH_STYLE"))
 	httpAddr := os.Getenv("HTTP_ADDR")
 	if httpAddr == "" {
@@ -35,11 +37,12 @@ func Load() (*Config, error) {
 		CloudFrontDomain:   os.Getenv("CLOUDFRONT_DOMAIN"),
 		SQSQueueURL:        os.Getenv("SQS_QUEUE_URL"),
 		ResultsQueueURL:    os.Getenv("RESULTS_QUEUE_URL"),
-		RedisAddr:           os.Getenv("REDIS_ADDR"),
-		S3PublicEndpointURL: os.Getenv("S3_PUBLIC_ENDPOINT_URL"),
-		S3UsePathStyle:      s3UsePathStyle,
-		CORSAllowedOrigins:  os.Getenv("CORS_ALLOWED_ORIGINS"),
-		HTTPAddr:            httpAddr,
+		RedisAddr:          os.Getenv("REDIS_ADDR"),
+		LocalStackEnabled:  localStack,
+		LocalStackEndpoint: os.Getenv("LOCALSTACK_ENDPOINT"),
+		S3UsePathStyle:     s3UsePathStyle,
+		CORSAllowedOrigins: os.Getenv("CORS_ALLOWED_ORIGINS"),
+		HTTPAddr:           httpAddr,
 	}
 
 	required := map[string]string{
@@ -58,6 +61,10 @@ func Load() (*Config, error) {
 		if val == "" {
 			return nil, fmt.Errorf("required environment variable %s is not set", name)
 		}
+	}
+
+	if c.LocalStackEnabled && c.LocalStackEndpoint == "" {
+		return nil, fmt.Errorf("LOCALSTACK_ENDPOINT must be set when LOCALSTACK_ENABLED is true")
 	}
 
 	return c, nil

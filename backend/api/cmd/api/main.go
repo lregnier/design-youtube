@@ -43,8 +43,8 @@ func main() {
 		s3Opts = append(s3Opts, func(o *awss3.Options) { o.UsePathStyle = true })
 	}
 	var transformer s3store.PresignedURLTransformer = s3store.NoOpTransformer{}
-	if cfg.S3PublicEndpointURL != "" {
-		transformer = s3store.NewLocalStackTransformer(cfg.S3PublicEndpointURL)
+	if cfg.LocalStackEnabled {
+		transformer = s3store.NewLocalStackTransformer(cfg.LocalStackEndpoint)
 	}
 	store := s3store.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, transformer)
 	cache := rediscache.NewCache(redis.NewClient(&redis.Options{Addr: cfg.RedisAddr}))

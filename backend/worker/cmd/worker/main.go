@@ -35,8 +35,8 @@ func main() {
 		s3Opts = append(s3Opts, func(o *awss3.Options) { o.UsePathStyle = true })
 	}
 	var urlBuilder s3storage.PublicURLBuilder
-	if cfg.S3PublicEndpointURL != "" {
-		urlBuilder = s3storage.NewLocalStackURLBuilder(cfg.S3PublicEndpointURL)
+	if cfg.LocalStackEnabled {
+		urlBuilder = s3storage.NewLocalStackURLBuilder(cfg.LocalStackEndpoint)
 	} else {
 		urlBuilder = s3storage.NewCloudFrontURLBuilder(cfg.CloudFrontDomain)
 	}
