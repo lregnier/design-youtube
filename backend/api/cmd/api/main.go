@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
@@ -37,18 +38,36 @@ func main() {
 	}
 
 	// Outbound adapters
-	repo := dynamo.NewRepository(dynamodb.NewFromConfig(awsCfg), cfg.DynamoDBTable)
+	dynamoOpts := []func(*dynamodb.Options){}
+	if cfg.DynamoDBEndpoint != "" {
+		dynamoOpts = append(dynamoOpts, func(o *dynamodb.Options) {
+			o.BaseEndpoint = aws.String(cfg.DynamoDBEndpoint)
+		})
+	}
+	repo := dynamo.NewRepository(dynamodb.NewFromConfig(awsCfg, dynamoOpts...), cfg.DynamoDBTable)
+
 	s3Opts := []func(*awss3.Options){}
-	if cfg.S3UsePathStyle {
-		s3Opts = append(s3Opts, func(o *awss3.Options) { o.UsePathStyle = true })
+	if cfg.S3Endpoint != "" {
+		s3Opts = append(s3Opts, func(o *awss3.Options) {
+			o.BaseEndpoint = aws.String(cfg.S3Endpoint)
+			o.UsePathStyle = true
+		})
 	}
 	var transformer s3store.PresignedURLTransformer = s3store.NoOpTransformer{}
-	if cfg.LocalStackEnabled {
-		transformer = s3store.NewLocalStackTransformer(cfg.LocalStackEndpoint)
+	if cfg.S3PublicURL != "" {
+		transformer = s3store.NewEndpointTransformer(cfg.S3PublicURL)
 	}
 	store := s3store.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, transformer)
+
 	cache := rediscache.NewCache(redis.NewClient(&redis.Options{Addr: cfg.RedisAddr}))
-	sqsClient := sqs.NewFromConfig(awsCfg)
+
+	sqsOpts := []func(*sqs.Options){}
+	if cfg.SQSEndpoint != "" {
+		sqsOpts = append(sqsOpts, func(o *sqs.Options) {
+			o.BaseEndpoint = aws.String(cfg.SQSEndpoint)
+		})
+	}
+	sqsClient := sqs.NewFromConfig(awsCfg, sqsOpts...)
 	processingQueue := sqsqueue.NewQueue(sqsClient, cfg.SQSQueueURL)
 
 	// Use cases
@@ -63,7 +82,7 @@ func main() {
 	h := httpadapter.NewHandler(initUC, confirmUC, completeUC, getVideoUC, listVideosUC)
 	srv := httpadapter.NewServer(h, cfg.UploadSecret, strings.Split(cfg.CORSAllowedOrigins, ","), cfg.HTTPAddr)
 
-	consumer := sqsconsumer.NewConsumer(sqsClient, cfg.ResultsQueueURL, applyResultUC)
+	consumer := sqsconsumer.NewConsumer(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.ResultsQueueURL, applyResultUC)
 	go consumer.Start(context.Background())
 
 	if err := srv.Start(); err != nil {

@@ -72,9 +72,9 @@ sequenceDiagram
 | `CLOUDFRONT_DOMAIN` | CloudFront domain used in published asset URLs |
 | `SQS_QUEUE_URL` | SQS URL to poll for processing jobs |
 | `RESULTS_QUEUE_URL` | SQS URL to publish results to |
-| `AWS_ENDPOINT_URL` | Override AWS endpoint (LocalStack in dev) |
-| `S3_USE_PATH_STYLE` | Use path-style S3 addressing (`true` for LocalStack, unset/`false` in production) |
-| `S3_PUBLIC_ENDPOINT_URL` | Publish `manifestUrl`/`thumbnailUrl` as path-style URLs against this endpoint (browser-accessible LocalStack URL); unset in production to use `CLOUDFRONT_DOMAIN` |
+| `S3_ENDPOINT_URL` | Override S3 endpoint (e.g. `http://minio:9000` for local dev); unset in production |
+| `S3_PUBLIC_URL` | Publish `manifestUrl`/`thumbnailUrl` as `{S3_PUBLIC_URL}/{bucket}/{key}` (e.g. `http://localhost:9000`); unset in production to use `CLOUDFRONT_DOMAIN` |
+| `SQS_ENDPOINT_URL` | Override SQS endpoint (e.g. `http://elasticmq:9324`); unset in production |
 
 ## Development
 

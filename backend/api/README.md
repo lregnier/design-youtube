@@ -143,10 +143,12 @@ stateDiagram-v2
 | `SQS_QUEUE_URL` | SQS URL for dispatching processing jobs |
 | `RESULTS_QUEUE_URL` | SQS URL for consuming processing results |
 | `REDIS_ADDR` | Redis address (`host:port`) |
-| `AWS_ENDPOINT_URL` | Override AWS endpoint (LocalStack in dev) |
-| `S3_USE_PATH_STYLE` | Use path-style S3 addressing (`true` for LocalStack, unset/`false` in production) |
-| `S3_PUBLIC_ENDPOINT_URL` | Rewrite presigned URL host to this endpoint (browser-accessible LocalStack URL) |
+| `S3_ENDPOINT_URL` | Override S3 endpoint (e.g. `http://minio:9000` for local dev); unset in production |
+| `S3_PUBLIC_URL` | Rewrite presigned URL host to this browser-reachable endpoint (e.g. `http://localhost:9000`); unset in production |
+| `DYNAMODB_ENDPOINT_URL` | Override DynamoDB endpoint (e.g. `http://dynamodb-local:8000`); unset in production |
+| `SQS_ENDPOINT_URL` | Override SQS endpoint (e.g. `http://elasticmq:9324`); unset in production |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins for upload endpoints |
+| `HTTP_ADDR` | HTTP listen address (default `:8080`) |
 
 ## Development
 

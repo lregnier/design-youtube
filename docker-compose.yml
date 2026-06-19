@@ -13,20 +13,24 @@ services:
       DYNAMODB_TABLE: videos
       S3_BUCKET: design-youtube-video-prod
       CLOUDFRONT_DOMAIN: localhost
-      SQS_QUEUE_URL: http://localstack:4566/000000000000/video-processing.fifo
-      RESULTS_QUEUE_URL: http://localstack:4566/000000000000/video-processing-results.fifo
+      SQS_QUEUE_URL: http://elasticmq:9324/000000000000/video-processing.fifo
+      RESULTS_QUEUE_URL: http://elasticmq:9324/000000000000/video-processing-results.fifo
       REDIS_ADDR: redis:6379
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
-      AWS_ENDPOINT_URL: http://localstack:4566
-      LOCALSTACK_ENABLED: "true"
-      LOCALSTACK_ENDPOINT: http://localhost:4566
-      S3_USE_PATH_STYLE: "true"
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_PUBLIC_URL: http://localhost:9000
+      DYNAMODB_ENDPOINT_URL: http://dynamodb-local:8000
+      SQS_ENDPOINT_URL: http://elasticmq:9324
       CORS_ALLOWED_ORIGINS: "*"
     depends_on:
       redis:
         condition: service_started
-      localstack:
+      minio-init:
+        condition: service_completed_successfully
+      dynamodb-init:
+        condition: service_completed_successfully
+      elasticmq:
         condition: service_healthy
 
   worker:
@@ -37,16 +41,19 @@ services:
       AWS_REGION: us-east-1
       S3_BUCKET: design-youtube-video-prod
       CLOUDFRONT_DOMAIN: localhost
-      SQS_QUEUE_URL: http://localstack:4566/000000000000/video-processing.fifo
-      RESULTS_QUEUE_URL: http://localstack:4566/000000000000/video-processing-results.fifo
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
-      AWS_ENDPOINT_URL: http://localstack:4566
-      S3_USE_PATH_STYLE: "true"
-      LOCALSTACK_ENABLED: "true"
-      LOCALSTACK_ENDPOINT: http://localhost:4566
+      SQS_QUEUE_URL: http://elasticmq:9324/000000000000/video-processing.fifo
+      RESULTS_QUEUE_URL: http://elasticmq:9324/000000000000/video-processing-results.fifo
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_PUBLIC_URL: http://localhost:9000
+      SQS_ENDPOINT_URL: http://elasticmq:9324
     depends_on:
-      localstack:
+      minio-init:
+        condition: service_completed_successfully
+      dynamodb-init:
+        condition: service_completed_successfully
+      elasticmq:
         condition: service_healthy
 
   frontend:
@@ -62,24 +69,83 @@ services:
     volumes:
       - redis-data:/data
 
-  localstack:
-    image: localstack/localstack:3
+  minio:
+    image: minio/minio
+    command: server /data --console-address :9001
     ports:
-      - "4566:4566"
+      - "9001:9001"
     environment:
-      SERVICES: s3,sqs,dynamodb
-      DEFAULT_REGION: us-east-1
-      PERSISTENCE: "1"
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
     volumes:
-      - ./docker/localstack-init.sh:/etc/localstack/init/ready.d/localstack-init.sh
-      - localstack-data:/var/lib/localstack
+      - minio-data:/data
     healthcheck:
-      test: ["CMD", "awslocal", "sqs", "list-queues"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 10s
+      start_period: 5s
+
+  minio-proxy:
+    image: nginx:alpine
+    ports:
+      - "9000:80"
+    volumes:
+      - ./docker/minio-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      minio:
+        condition: service_healthy
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./docker/minio-init.sh:/minio-init.sh:ro
+    entrypoint: ["/bin/sh", "/minio-init.sh"]
+
+  dynamodb-local:
+    image: amazon/dynamodb-local
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data"
+    ports:
+      - "8000:8000"
+    volumes:
+      - dynamodb-data:/home/dynamodblocal/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8000 > /dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  dynamodb-init:
+    image: amazon/aws-cli
+    depends_on:
+      dynamodb-local:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      - ./docker/dynamodb-init.sh:/dynamodb-init.sh:ro
+    entrypoint: ["/bin/sh", "/dynamodb-init.sh"]
+
+  elasticmq:
+    image: softwaremill/elasticmq-native
+    ports:
+      - "9324:9324"
+    volumes:
+      - ./docker/elasticmq.conf:/opt/elasticmq.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9324 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
 volumes:
-  localstack-data:
   redis-data:
+  minio-data:
+  dynamodb-data:

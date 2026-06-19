@@ -52,10 +52,13 @@ docker compose up --build
 |---------|---------|
 | API | http://localhost:8080 |
 | Frontend | http://localhost:3000 |
-| LocalStack (AWS emulation) | http://localhost:4566 |
+| MinIO (S3 / object store) | http://localhost:9000 |
+| MinIO console | http://localhost:9001 |
+| DynamoDB Local | http://localhost:8000 |
+| ElasticMQ (SQS) | http://localhost:9324 |
 | Redis | localhost:6379 |
 
-AWS services (object store, queues, database) are emulated locally by [LocalStack](https://github.com/localstack/localstack). The upload secret for protected endpoints is `devsecret`.
+AWS services are emulated locally by purpose-built containers: [MinIO](https://min.io/) for S3, [DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html) for DynamoDB, and [ElasticMQ](https://github.com/softwaremill/elasticmq) for SQS. The upload secret for protected endpoints is `devsecret`.
 
 ## CI/CD
 

@@ -1,19 +1,4 @@
-## ADDED Requirements
-
-### Requirement: CORS allowed origins are configurable via environment variable
-The API SHALL read allowed CORS origins from the `CORS_ALLOWED_ORIGINS` environment variable. The value SHALL be a comma-separated list of origin strings. The API SHALL refuse to start if `CORS_ALLOWED_ORIGINS` is not set.
-
-#### Scenario: Single origin configured
-- **WHEN** `CORS_ALLOWED_ORIGINS` is set to `https://app.example.com`
-- **THEN** the API allows cross-origin requests only from `https://app.example.com`
-
-#### Scenario: Wildcard configured for local dev
-- **WHEN** `CORS_ALLOWED_ORIGINS` is set to `*`
-- **THEN** the API allows cross-origin requests from any origin
-
-#### Scenario: Variable not set
-- **WHEN** `CORS_ALLOWED_ORIGINS` is unset at startup
-- **THEN** the API fails to start with a clear error message
+## MODIFIED Requirements
 
 ### Requirement: S3 path-style access is configurable via environment variable
 The API SHALL use path-style S3 addressing when `S3_ENDPOINT_URL` is set, and virtual-hosted style (the AWS default) when it is unset. The `S3_USE_PATH_STYLE` environment variable is removed.
@@ -26,16 +11,13 @@ The API SHALL use path-style S3 addressing when `S3_ENDPOINT_URL` is set, and vi
 - **WHEN** `S3_ENDPOINT_URL` is unset
 - **THEN** the S3 client uses virtual-hosted style (`https://bucket.s3.amazonaws.com/key`)
 
-### Requirement: HTTP listen address is configurable via environment variable
-The API SHALL read its HTTP listen address from the `HTTP_ADDR` environment variable. When set, the HTTP server SHALL listen on that address. When unset, the HTTP server SHALL listen on `:8080`.
+## REMOVED Requirements
 
-#### Scenario: Listen address configured
-- **WHEN** `HTTP_ADDR` is set to `:9090`
-- **THEN** the HTTP server listens on `:9090`
+### Requirement: LocalStack mode is configurable via environment variables
+**Reason**: LocalStack is replaced by MinIO. The `LOCALSTACK_ENABLED` + `LOCALSTACK_ENDPOINT` variables are superseded by `S3_ENDPOINT_URL`.
+**Migration**: Replace `LOCALSTACK_ENABLED=true` + `LOCALSTACK_ENDPOINT=http://localhost:4566` with `S3_ENDPOINT_URL=http://localhost:9000`.
 
-#### Scenario: Listen address unset
-- **WHEN** `HTTP_ADDR` is unset
-- **THEN** the HTTP server listens on `:8080`
+## ADDED Requirements
 
 ### Requirement: Per-service AWS endpoint URLs are configurable via environment variables
 The API SHALL read optional endpoint overrides for each AWS service: `S3_ENDPOINT_URL`, `DYNAMODB_ENDPOINT_URL`, and `SQS_ENDPOINT_URL`. When set, the corresponding AWS SDK client SHALL use that endpoint. When unset, the client SHALL use the real AWS endpoint.

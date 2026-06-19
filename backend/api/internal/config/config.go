@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"strconv"
 )
 
 type Config struct {
@@ -15,16 +14,15 @@ type Config struct {
 	SQSQueueURL        string
 	ResultsQueueURL    string
 	RedisAddr          string
-	LocalStackEnabled  bool
-	LocalStackEndpoint string
-	S3UsePathStyle     bool
+	S3Endpoint         string
+	S3PublicURL        string
+	DynamoDBEndpoint   string
+	SQSEndpoint        string
 	CORSAllowedOrigins string
 	HTTPAddr           string
 }
 
 func Load() (*Config, error) {
-	localStack, _ := strconv.ParseBool(os.Getenv("LOCALSTACK_ENABLED"))
-	s3UsePathStyle, _ := strconv.ParseBool(os.Getenv("S3_USE_PATH_STYLE"))
 	httpAddr := os.Getenv("HTTP_ADDR")
 	if httpAddr == "" {
 		httpAddr = ":8080"
@@ -38,9 +36,10 @@ func Load() (*Config, error) {
 		SQSQueueURL:        os.Getenv("SQS_QUEUE_URL"),
 		ResultsQueueURL:    os.Getenv("RESULTS_QUEUE_URL"),
 		RedisAddr:          os.Getenv("REDIS_ADDR"),
-		LocalStackEnabled:  localStack,
-		LocalStackEndpoint: os.Getenv("LOCALSTACK_ENDPOINT"),
-		S3UsePathStyle:     s3UsePathStyle,
+		S3Endpoint:         os.Getenv("S3_ENDPOINT_URL"),
+		S3PublicURL:        os.Getenv("S3_PUBLIC_URL"),
+		DynamoDBEndpoint:   os.Getenv("DYNAMODB_ENDPOINT_URL"),
+		SQSEndpoint:        os.Getenv("SQS_ENDPOINT_URL"),
 		CORSAllowedOrigins: os.Getenv("CORS_ALLOWED_ORIGINS"),
 		HTTPAddr:           httpAddr,
 	}
@@ -61,10 +60,6 @@ func Load() (*Config, error) {
 		if val == "" {
 			return nil, fmt.Errorf("required environment variable %s is not set", name)
 		}
-	}
-
-	if c.LocalStackEnabled && c.LocalStackEndpoint == "" {
-		return nil, fmt.Errorf("LOCALSTACK_ENDPOINT must be set when LOCALSTACK_ENABLED is true")
 	}
 
 	return c, nil

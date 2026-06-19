@@ -16,12 +16,12 @@ func (b *CloudFrontURLBuilder) AssetURL(_, key string) string {
 	return fmt.Sprintf("https://%s/%s", b.domain, key)
 }
 
-type LocalStackURLBuilder struct{ endpoint string }
+type EndpointURLBuilder struct{ endpoint string }
 
-func NewLocalStackURLBuilder(endpoint string) *LocalStackURLBuilder {
-	return &LocalStackURLBuilder{endpoint: endpoint}
+func NewEndpointURLBuilder(endpoint string) *EndpointURLBuilder {
+	return &EndpointURLBuilder{endpoint: endpoint}
 }
 
-func (b *LocalStackURLBuilder) AssetURL(bucket, key string) string {
+func (b *EndpointURLBuilder) AssetURL(bucket, key string) string {
 	return fmt.Sprintf("%s/%s/%s", b.endpoint, bucket, key)
 }

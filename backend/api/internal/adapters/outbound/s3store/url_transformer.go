@@ -10,13 +10,13 @@ type NoOpTransformer struct{}
 
 func (NoOpTransformer) Transform(u string) string { return u }
 
-type LocalStackTransformer struct{ publicEndpoint string }
+type EndpointTransformer struct{ publicEndpoint string }
 
-func NewLocalStackTransformer(endpoint string) *LocalStackTransformer {
-	return &LocalStackTransformer{publicEndpoint: endpoint}
+func NewEndpointTransformer(endpoint string) *EndpointTransformer {
+	return &EndpointTransformer{publicEndpoint: endpoint}
 }
 
-func (t *LocalStackTransformer) Transform(presignedURL string) string {
+func (t *EndpointTransformer) Transform(presignedURL string) string {
 	pub, err := url.Parse(t.publicEndpoint)
 	if err != nil {
 		return presignedURL
