@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Backend lists all visible videos
 The backend SHALL expose `GET /videos`. The response SHALL return an array of video summaries for all videos with status `processing`, `ready`, or `failed`, ordered by upload timestamp descending. Each summary SHALL include: videoId, title, thumbnailUrl, uploadedAt, and status. Videos with status `uploading` SHALL be excluded (the upload flow is still in progress and the video is not yet visible to the viewer).
@@ -20,7 +20,7 @@ The backend SHALL expose `GET /videos`. The response SHALL return an array of vi
 - **THEN** the server returns 200 with an empty array
 
 ### Requirement: Frontend homepage displays all visible videos with status-aware cards
-The frontend root route (`/`) SHALL render a grid of video cards for all videos returned by `GET /videos`. Each card SHALL display the video title and upload date. Cards for `ready` videos SHALL display the thumbnail image and be clickable, navigating to `/videos/{videoId}`. Cards for `processing` videos SHALL show a spinner animation and a "Processing…" label in place of the thumbnail and SHALL NOT be clickable. Cards for `failed` videos SHALL show a "Failed" indicator and SHALL NOT be clickable.
+The frontend root route (`/`) SHALL render a grid of video cards for all videos returned by `GET /videos`. Each card SHALL display the video title and upload date. Cards for `ready` videos SHALL display the thumbnail image and be clickable, navigating to `/videos/{videoId}`. Cards for `processing` videos SHALL show a "Processing…" indicator in place of the thumbnail and SHALL NOT be clickable. Cards for `failed` videos SHALL show a "Failed" indicator and SHALL NOT be clickable.
 
 #### Scenario: Ready video card is clickable with thumbnail
 - **WHEN** a video with status `ready` is shown on the homepage
@@ -28,7 +28,7 @@ The frontend root route (`/`) SHALL render a grid of video cards for all videos 
 
 #### Scenario: Processing video card is not clickable
 - **WHEN** a video with status `processing` is shown on the homepage
-- **THEN** the card shows a spinner and "Processing…" label and clicking it does nothing
+- **THEN** the card shows a "Processing…" indicator and clicking it does nothing
 
 #### Scenario: Failed video card is not clickable
 - **WHEN** a video with status `failed` is shown on the homepage
@@ -52,18 +52,3 @@ The homepage SHALL automatically refresh the video list every 5 seconds while at
 #### Scenario: Polling cleans up on unmount
 - **WHEN** the user navigates away from the homepage while polling is active
 - **THEN** the interval is cleared and no further requests are made
-
-### Requirement: Frontend upload page is accessible to secret holders
-The frontend SHALL expose an `/upload` route with a form for selecting a video file and entering a title and description. The form SHALL accept an upload secret input field. On submit, the frontend SHALL execute the multipart upload flow against the backend. Upload progress SHALL be displayed per chunk.
-
-#### Scenario: Successful upload flow
-- **WHEN** a user fills the upload form with a valid secret and a file ≤ 100MB and submits
-- **THEN** the frontend completes the multipart upload and redirects to the homepage on completion
-
-#### Scenario: File too large is rejected client-side
-- **WHEN** a user selects a file larger than 100MB
-- **THEN** the frontend displays an error before making any network request
-
-#### Scenario: Wrong secret shows error
-- **WHEN** a user submits the upload form with an incorrect secret
-- **THEN** the backend returns 401 and the frontend displays an "invalid secret" error message

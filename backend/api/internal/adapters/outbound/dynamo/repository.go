@@ -2,6 +2,7 @@ package dynamo
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -75,16 +76,14 @@ func (r *Repository) FindByID(ctx context.Context, id video.VideoID) (*video.Vid
 	return toDomain(&rec), nil
 }
 
-func (r *Repository) ListReady(ctx context.Context) ([]*video.Video, error) {
-	out, err := r.client.Query(ctx, &dynamodb.QueryInput{
-		TableName:              &r.tableName,
-		IndexName:              aws.String("status-uploadedAt-index"),
-		KeyConditionExpression: aws.String("#st = :st"),
-		ExpressionAttributeNames:  map[string]string{"#st": "status"},
+func (r *Repository) List(ctx context.Context) ([]*video.Video, error) {
+	out, err := r.client.Scan(ctx, &dynamodb.ScanInput{
+		TableName:        &r.tableName,
+		FilterExpression: aws.String("#st <> :uploading"),
+		ExpressionAttributeNames: map[string]string{"#st": "status"},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":st": &types.AttributeValueMemberS{Value: string(video.StatusReady)},
+			":uploading": &types.AttributeValueMemberS{Value: string(video.StatusUploading)},
 		},
-		ScanIndexForward: aws.Bool(false),
 	})
 	if err != nil {
 		return nil, err
@@ -97,6 +96,9 @@ func (r *Repository) ListReady(ctx context.Context) ([]*video.Video, error) {
 	for i, rec := range records {
 		videos[i] = toDomain(&rec)
 	}
+	sort.Slice(videos, func(i, j int) bool {
+		return videos[i].UploadedAt.After(videos[j].UploadedAt)
+	})
 	return videos, nil
 }
 

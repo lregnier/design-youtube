@@ -15,5 +15,5 @@ func NewListVideos(repo video.VideoRepository) ListVideos {
 }
 
 func (uc ListVideos) Execute(ctx context.Context) ([]*video.Video, error) {
-	return uc.repo.ListReady(ctx)
+	return uc.repo.List(ctx)
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { getVideos, type VideoSummary } from "../api/client";
 import { VideoCard } from "../components/VideoCard";
@@ -7,12 +7,32 @@ export function HomePage() {
   const [videos, setVideos] = useState<VideoSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
+  function loadVideos() {
     getVideos()
-      .then(setVideos)
+      .then((data) => {
+        setVideos(data);
+        const anyProcessing = data.some((v) => v.status === "processing");
+        if (anyProcessing && !intervalRef.current) {
+          intervalRef.current = setInterval(loadVideos, 5000);
+        } else if (!anyProcessing && intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadVideos();
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, []);
 
   return (

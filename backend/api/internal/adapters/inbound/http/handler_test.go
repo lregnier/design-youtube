@@ -41,7 +41,7 @@ func TestHandler_GetVideos_Success(t *testing.T) {
 	queue := mocks.NewMockQueue(t)
 
 	uploadedAt := time.Now().UTC().Truncate(time.Second)
-	repo.EXPECT().ListReady(mock.Anything).Return([]*video.Video{
+	repo.EXPECT().List(mock.Anything).Return([]*video.Video{
 		{ID: "vid-1", Title: "First", Status: video.StatusReady, ThumbnailURL: "https://cdn.example.com/vid-1/thumb.jpg", UploadedAt: uploadedAt},
 	}, nil)
 
@@ -67,7 +67,7 @@ func TestHandler_GetVideos_Error(t *testing.T) {
 	cache := mocks.NewMockCache(t)
 	queue := mocks.NewMockQueue(t)
 
-	repo.EXPECT().ListReady(mock.Anything).Return(nil, errors.New("dynamodb unavailable"))
+	repo.EXPECT().List(mock.Anything).Return(nil, errors.New("dynamodb unavailable"))
 
 	h := newTestHandler(repo, store, cache, queue)
 

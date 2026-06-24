@@ -81,12 +81,12 @@ func (_c *MockVideoRepository_FindByID_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
-// ListReady provides a mock function with given fields: ctx
-func (_m *MockVideoRepository) ListReady(ctx context.Context) ([]*video.Video, error) {
+// List provides a mock function with given fields: ctx
+func (_m *MockVideoRepository) List(ctx context.Context) ([]*video.Video, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListReady")
+		panic("no return value specified for List")
 	}
 
 	var r0 []*video.Video
@@ -111,30 +111,30 @@ func (_m *MockVideoRepository) ListReady(ctx context.Context) ([]*video.Video, e
 	return r0, r1
 }
 
-// MockVideoRepository_ListReady_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListReady'
-type MockVideoRepository_ListReady_Call struct {
+// MockVideoRepository_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type MockVideoRepository_List_Call struct {
 	*mock.Call
 }
 
-// ListReady is a helper method to define mock.On call
+// List is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockVideoRepository_Expecter) ListReady(ctx interface{}) *MockVideoRepository_ListReady_Call {
-	return &MockVideoRepository_ListReady_Call{Call: _e.mock.On("ListReady", ctx)}
+func (_e *MockVideoRepository_Expecter) List(ctx interface{}) *MockVideoRepository_List_Call {
+	return &MockVideoRepository_List_Call{Call: _e.mock.On("List", ctx)}
 }
 
-func (_c *MockVideoRepository_ListReady_Call) Run(run func(ctx context.Context)) *MockVideoRepository_ListReady_Call {
+func (_c *MockVideoRepository_List_Call) Run(run func(ctx context.Context)) *MockVideoRepository_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context))
 	})
 	return _c
 }
 
-func (_c *MockVideoRepository_ListReady_Call) Return(_a0 []*video.Video, _a1 error) *MockVideoRepository_ListReady_Call {
+func (_c *MockVideoRepository_List_Call) Return(_a0 []*video.Video, _a1 error) *MockVideoRepository_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockVideoRepository_ListReady_Call) RunAndReturn(run func(context.Context) ([]*video.Video, error)) *MockVideoRepository_ListReady_Call {
+func (_c *MockVideoRepository_List_Call) RunAndReturn(run func(context.Context) ([]*video.Video, error)) *MockVideoRepository_List_Call {
 	_c.Call.Return(run)
 	return _c
 }

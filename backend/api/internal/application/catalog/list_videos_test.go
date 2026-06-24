@@ -19,7 +19,7 @@ func TestListVideos_Execute_ReturnsList(t *testing.T) {
 		{ID: "vid-1", Title: "First", Status: video.StatusReady, UploadedAt: time.Now()},
 		{ID: "vid-2", Title: "Second", Status: video.StatusReady, UploadedAt: time.Now().Add(-time.Hour)},
 	}
-	repo.EXPECT().ListReady(mock.Anything).Return(videos, nil)
+	repo.EXPECT().List(mock.Anything).Return(videos, nil)
 
 	uc := NewListVideos(repo)
 
@@ -35,7 +35,7 @@ func TestListVideos_Execute_ReturnsList(t *testing.T) {
 func TestListVideos_Execute_EmptyList(t *testing.T) {
 	// Arrange
 	repo := mocks.NewMockVideoRepository(t)
-	repo.EXPECT().ListReady(mock.Anything).Return([]*video.Video{}, nil)
+	repo.EXPECT().List(mock.Anything).Return([]*video.Video{}, nil)
 
 	uc := NewListVideos(repo)
 
