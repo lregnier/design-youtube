@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { getVideos, type VideoSummary } from "../api/client";
 import { VideoCard } from "../components/VideoCard";
 
@@ -36,22 +35,32 @@ export function HomePage() {
   }, []);
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 24 }}>Videos</h1>
-        <Link to="/upload" style={{ padding: "8px 16px", background: "#e00", color: "#fff", borderRadius: 6, textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
-          Upload
-        </Link>
-      </div>
-
-      {loading && <p>Loading…</p>}
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
-
-      {!loading && !error && videos.length === 0 && (
-        <p style={{ color: "#888", textAlign: "center", marginTop: 60 }}>No videos yet</p>
+    <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 24px 60px" }}>
+      {loading && (
+        <p style={{ color: "#606060", fontSize: 14, padding: "40px 0" }}>Loading…</p>
+      )}
+      {error && (
+        <p style={{ color: "#c00", fontSize: 14, padding: "40px 0" }}>Error: {error}</p>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
+      {!loading && !error && videos.length === 0 && (
+        <div style={{ textAlign: "center", padding: "100px 0", color: "#606060" }}>
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true" style={{ marginBottom: 20, opacity: 0.3 }}>
+            <rect width="64" height="64" rx="12" fill="#0f0f0f" />
+            <polygon points="26,18 50,32 26,46" fill="#fff" />
+          </svg>
+          <p style={{ fontSize: 18, fontWeight: 500, color: "#0f0f0f", marginBottom: 8 }}>No videos yet</p>
+          <p style={{ fontSize: 14 }}>Upload your first video to get started</p>
+        </div>
+      )}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+          gap: "40px 16px",
+        }}
+      >
         {videos.map((v) => (
           <VideoCard key={v.videoId} video={v} />
         ))}

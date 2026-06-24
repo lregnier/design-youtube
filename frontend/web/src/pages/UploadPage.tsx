@@ -12,6 +12,7 @@ export function UploadPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [secret, setSecret] = useState("");
+  const [showSecret, setShowSecret] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
@@ -84,89 +85,152 @@ export function UploadPage() {
     }
   }
 
+  const inputStyle: React.CSSProperties = {
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid #e5e5e5",
+    fontSize: 14,
+    color: "#0f0f0f",
+    background: "#fff",
+    outline: "none",
+    width: "100%",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#606060",
+  };
+
   return (
-    <div style={{ maxWidth: 560, margin: "48px auto", padding: "0 16px" }}>
-      <h1 style={{ fontSize: 22, marginBottom: 24 }}>Upload Video</h1>
+    <div style={{ maxWidth: 600, margin: "40px auto", padding: "0 24px 80px" }}>
+      <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0f0f0f", marginBottom: 32 }}>
+        Upload video
+      </h1>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 14 }}>
-          Video file
-          <input ref={fileRef} type="file" accept="video/*" disabled={uploading} />
-        </label>
+      <div style={{ background: "#fff", borderRadius: 16, padding: "32px", border: "1px solid #e5e5e5" }}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <label style={labelStyle}>
+            Video file
+            <input ref={fileRef} type="file" accept="video/*" disabled={uploading} style={{ fontSize: 13 }} />
+          </label>
 
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 14 }}>
-          Title *
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={200}
-            disabled={uploading}
-            style={{ padding: "6px 8px", borderRadius: 4, border: "1px solid #ccc" }}
-          />
-        </label>
+          <label style={labelStyle}>
+            Title *
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={200}
+              placeholder="Add a title"
+              disabled={uploading}
+              style={inputStyle}
+            />
+          </label>
 
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 14 }}>
-          Description
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            maxLength={2000}
-            disabled={uploading}
-            style={{ padding: "6px 8px", borderRadius: 4, border: "1px solid #ccc", resize: "vertical" }}
-          />
-        </label>
+          <label style={labelStyle}>
+            Description
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              maxLength={2000}
+              placeholder="Tell viewers about your video"
+              disabled={uploading}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: "22px" }}
+            />
+          </label>
 
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 14 }}>
-          Upload secret
-          <input
-            type="password"
-            value={secret}
-            onChange={(e) => setSecret(e.target.value)}
-            disabled={uploading}
-            style={{ padding: "6px 8px", borderRadius: 4, border: "1px solid #ccc" }}
-          />
-        </label>
-
-        {error && <p style={{ color: "red", margin: 0, fontSize: 13 }}>{error}</p>}
-
-        {progress && (
-          <div>
-            <p style={{ margin: "0 0 4px", fontSize: 13 }}>
-              Uploading chunk {progress.current} of {progress.total}…
-            </p>
-            <div style={{ background: "#eee", borderRadius: 4, height: 8 }}>
-              <div
-                style={{
-                  background: "#e00",
-                  height: "100%",
-                  borderRadius: 4,
-                  width: `${(progress.current / progress.total) * 100}%`,
-                  transition: "width 0.2s",
-                }}
+          <label style={labelStyle}>
+            Upload secret
+            <div style={{ position: "relative" }}>
+              <input
+                type={showSecret ? "text" : "password"}
+                value={secret}
+                onChange={(e) => setSecret(e.target.value)}
+                disabled={uploading}
+                style={{ ...inputStyle, paddingRight: 40 }}
               />
+              <button
+                type="button"
+                onClick={() => setShowSecret((v) => !v)}
+                style={{
+                  position: "absolute",
+                  right: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 4,
+                  color: "#606060",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                aria-label={showSecret ? "Hide secret" : "Show secret"}
+              >
+                {showSecret ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
             </div>
-          </div>
-        )}
+          </label>
 
-        <button
-          type="submit"
-          disabled={uploading}
-          style={{
-            padding: "10px",
-            background: uploading ? "#ccc" : "#e00",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: uploading ? "not-allowed" : "pointer",
-          }}
-        >
-          {uploading ? "Uploading…" : "Upload"}
-        </button>
-      </form>
+          {error && (
+            <p style={{ color: "#c00", fontSize: 13, margin: 0 }}>{error}</p>
+          )}
+
+          {progress && (
+            <div>
+              <p style={{ fontSize: 13, color: "#606060", marginBottom: 8 }}>
+                Uploading part {progress.current} of {progress.total}…
+              </p>
+              <div style={{ background: "#f2f2f2", borderRadius: 4, height: 6, overflow: "hidden" }}>
+                <div
+                  style={{
+                    background: "#ff0000",
+                    height: "100%",
+                    borderRadius: 4,
+                    width: `${(progress.current / progress.total) * 100}%`,
+                    transition: "width 0.3s ease",
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={uploading}
+            style={{
+              marginTop: 4,
+              padding: "11px",
+              background: uploading ? "#aaa" : "#ff0000",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: uploading ? "not-allowed" : "pointer",
+              letterSpacing: "0.1px",
+            }}
+          >
+            {uploading ? "Uploading…" : "Upload"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

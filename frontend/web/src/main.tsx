@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Layout } from "./components/Layout";
 import { HomePage } from "./pages/HomePage";
 import { VideoPage } from "./pages/VideoPage";
 import { UploadPage } from "./pages/UploadPage";
@@ -10,9 +11,11 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/videos/:videoId" element={<VideoPage />} />
-        <Route path="/upload" element={<UploadPage />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/videos/:videoId" element={<VideoPage />} />
+          <Route path="/upload" element={<UploadPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   </StrictMode>
