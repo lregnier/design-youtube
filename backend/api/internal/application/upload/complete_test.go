@@ -17,7 +17,7 @@ func TestCompleteUpload_Execute_Success(t *testing.T) {
 	// Arrange
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	vid := videoWithChunks(2, true)
 	repo.EXPECT().FindByID(mock.Anything, video.VideoID("vid-1")).Return(vid, nil)
@@ -27,11 +27,11 @@ func TestCompleteUpload_Execute_Success(t *testing.T) {
 	repo.EXPECT().Save(mock.Anything, mock.MatchedBy(func(v *video.Video) bool {
 		return v.Status == video.StatusProcessing
 	})).Return(nil)
-	queue.EXPECT().
-		SendMessage(mock.Anything, `{"videoId":"vid-1","s3Key":"raw/vid-1/original"}`, "vid-1").
+	publisher.EXPECT().
+		Publish(mock.Anything, video.VideoUploadedEvent{VideoID: "vid-1", S3Key: "raw/vid-1/original"}).
 		Return(nil)
 
-	uc := NewCompleteUpload(repo, store, queue)
+	uc := NewCompleteUpload(repo, store, publisher)
 
 	// Act
 	err := uc.Execute(context.Background(), CompleteUploadCommand{
@@ -47,10 +47,10 @@ func TestCompleteUpload_Execute_VideoNotFound(t *testing.T) {
 	// Arrange
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	repo.EXPECT().FindByID(mock.Anything, video.VideoID("missing")).Return(nil, nil)
-	uc := NewCompleteUpload(repo, store, queue)
+	uc := NewCompleteUpload(repo, store, publisher)
 
 	// Act
 	err := uc.Execute(context.Background(), CompleteUploadCommand{VideoID: "missing", UploadID: "mpu"})
@@ -64,7 +64,7 @@ func TestCompleteUpload_Execute_S3Error(t *testing.T) {
 	// Arrange
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	vid := videoWithChunks(1, true)
 	repo.EXPECT().FindByID(mock.Anything, video.VideoID("vid-1")).Return(vid, nil)
@@ -72,7 +72,7 @@ func TestCompleteUpload_Execute_S3Error(t *testing.T) {
 		CompleteMultipartUpload(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(errors.New("s3 error"))
 
-	uc := NewCompleteUpload(repo, store, queue)
+	uc := NewCompleteUpload(repo, store, publisher)
 
 	// Act
 	err := uc.Execute(context.Background(), CompleteUploadCommand{VideoID: "vid-1", UploadID: "mpu-1"})
@@ -82,11 +82,11 @@ func TestCompleteUpload_Execute_S3Error(t *testing.T) {
 	assert.Contains(t, err.Error(), "s3 error")
 }
 
-func TestCompleteUpload_Execute_QueueSendError(t *testing.T) {
+func TestCompleteUpload_Execute_PublishError(t *testing.T) {
 	// Arrange
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	vid := videoWithChunks(1, true)
 	repo.EXPECT().FindByID(mock.Anything, video.VideoID("vid-1")).Return(vid, nil)
@@ -96,11 +96,11 @@ func TestCompleteUpload_Execute_QueueSendError(t *testing.T) {
 	repo.EXPECT().Save(mock.Anything, mock.MatchedBy(func(v *video.Video) bool {
 		return v.Status == video.StatusProcessing
 	})).Return(nil)
-	queue.EXPECT().
-		SendMessage(mock.Anything, mock.Anything, "vid-1").
+	publisher.EXPECT().
+		Publish(mock.Anything, mock.Anything).
 		Return(errors.New("sqs error"))
 
-	uc := NewCompleteUpload(repo, store, queue)
+	uc := NewCompleteUpload(repo, store, publisher)
 
 	// Act
 	err := uc.Execute(context.Background(), CompleteUploadCommand{VideoID: "vid-1", UploadID: "mpu-1"})

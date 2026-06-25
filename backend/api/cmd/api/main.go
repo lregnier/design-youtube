@@ -17,7 +17,7 @@ import (
 	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/dynamo"
 	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/rediscache"
 	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/s3store"
-	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/sqsqueue"
+	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/sqspublisher"
 	"github.com/lregnier/design-youtube/api/internal/application/catalog"
 	"github.com/lregnier/design-youtube/api/internal/application/processing"
 	"github.com/lregnier/design-youtube/api/internal/application/upload"
@@ -68,12 +68,12 @@ func main() {
 		})
 	}
 	sqsClient := sqs.NewFromConfig(awsCfg, sqsOpts...)
-	processingQueue := sqsqueue.NewQueue(sqsClient, cfg.SQSQueueURL)
+	publisher := sqspublisher.NewPublisher(sqsClient, cfg.SQSQueueURL)
 
 	// Use cases
 	initUC := upload.NewInitUpload(repo, store, cfg.S3Bucket)
 	confirmUC := upload.NewConfirmChunk(repo, store)
-	completeUC := upload.NewCompleteUpload(repo, store, processingQueue)
+	completeUC := upload.NewCompleteUpload(repo, store, publisher)
 	getVideoUC := catalog.NewGetVideo(repo, cache)
 	listVideosUC := catalog.NewListVideos(repo)
 	applyResultUC := processing.NewApplyProcessingResult(repo)

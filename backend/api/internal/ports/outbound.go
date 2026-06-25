@@ -1,6 +1,10 @@
 package ports
 
-import "context"
+import (
+	"context"
+
+	"github.com/lregnier/design-youtube/api/internal/domain/video"
+)
 
 type MultipartUpload struct {
 	UploadID string
@@ -28,6 +32,6 @@ type Cache interface {
 	Set(ctx context.Context, key string, value []byte) error
 }
 
-type Queue interface {
-	SendMessage(ctx context.Context, body, messageGroupID string) error
+type EventPublisher interface {
+	Publish(ctx context.Context, event video.DomainEvent) error
 }

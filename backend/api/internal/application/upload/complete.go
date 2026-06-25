@@ -2,7 +2,6 @@ package upload
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -16,18 +15,13 @@ type CompleteUploadCommand struct {
 }
 
 type CompleteUpload struct {
-	repo  video.VideoRepository
-	store ports.ObjectStore
-	queue ports.Queue
+	repo      video.VideoRepository
+	store     ports.ObjectStore
+	publisher ports.EventPublisher
 }
 
-func NewCompleteUpload(repo video.VideoRepository, store ports.ObjectStore, queue ports.Queue) CompleteUpload {
-	return CompleteUpload{repo: repo, store: store, queue: queue}
-}
-
-type processingJob struct {
-	VideoID string `json:"videoId"`
-	S3Key   string `json:"s3Key"`
+func NewCompleteUpload(repo video.VideoRepository, store ports.ObjectStore, publisher ports.EventPublisher) CompleteUpload {
+	return CompleteUpload{repo: repo, store: store, publisher: publisher}
 }
 
 func (uc CompleteUpload) Execute(ctx context.Context, cmd CompleteUploadCommand) error {
@@ -56,12 +50,8 @@ func (uc CompleteUpload) Execute(ctx context.Context, cmd CompleteUploadCommand)
 		return err
 	}
 
-	job, err := json.Marshal(processingJob{VideoID: string(vid.ID), S3Key: key})
-	if err != nil {
-		return fmt.Errorf("marshal processing job: %w", err)
-	}
-	if err := uc.queue.SendMessage(ctx, string(job), string(vid.ID)); err != nil {
-		return fmt.Errorf("send processing job: %w", err)
+	if err := uc.publisher.Publish(ctx, video.VideoUploadedEvent{VideoID: string(vid.ID), S3Key: key}); err != nil {
+		return fmt.Errorf("publish video uploaded: %w", err)
 	}
 
 	return nil

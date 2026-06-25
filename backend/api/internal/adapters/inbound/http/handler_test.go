@@ -22,12 +22,12 @@ func newTestHandler(
 	repo *mocks.MockVideoRepository,
 	store *mocks.MockObjectStore,
 	cache *mocks.MockCache,
-	queue *mocks.MockQueue,
+	publisher *mocks.MockEventPublisher,
 ) *Handler {
 	return NewHandler(
 		upload.NewInitUpload(repo, store, "my-bucket"),
 		upload.NewConfirmChunk(repo, store),
-		upload.NewCompleteUpload(repo, store, queue),
+		upload.NewCompleteUpload(repo, store, publisher),
 		catalog.NewGetVideo(repo, cache),
 		catalog.NewListVideos(repo),
 	)
@@ -38,14 +38,14 @@ func TestHandler_GetVideos_Success(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	uploadedAt := time.Now().UTC().Truncate(time.Second)
 	repo.EXPECT().List(mock.Anything).Return([]*video.Video{
 		{ID: "vid-1", Title: "First", Status: video.StatusReady, ThumbnailURL: "https://cdn.example.com/vid-1/thumb.jpg", UploadedAt: uploadedAt},
 	}, nil)
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	// Act
 	resp, err := h.GetVideos(context.Background(), api.GetVideosRequestObject{})
@@ -65,11 +65,11 @@ func TestHandler_GetVideos_Error(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	repo.EXPECT().List(mock.Anything).Return(nil, errors.New("dynamodb unavailable"))
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	// Act
 	resp, err := h.GetVideos(context.Background(), api.GetVideosRequestObject{})
@@ -86,7 +86,7 @@ func TestHandler_GetVideo_Found(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	vid := &video.Video{
 		ID:           "vid-1",
@@ -100,7 +100,7 @@ func TestHandler_GetVideo_Found(t *testing.T) {
 	data, _ := json.Marshal(vid)
 	cache.EXPECT().Get(mock.Anything, "video:vid-1").Return(data, nil)
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	// Act
 	resp, err := h.GetVideo(context.Background(), api.GetVideoRequestObject{VideoId: "vid-1"})
@@ -120,12 +120,12 @@ func TestHandler_GetVideo_NotFound(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	cache.EXPECT().Get(mock.Anything, "video:missing").Return(nil, errors.New("cache miss"))
 	repo.EXPECT().FindByID(mock.Anything, video.VideoID("missing")).Return(nil, nil)
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	// Act
 	resp, err := h.GetVideo(context.Background(), api.GetVideoRequestObject{VideoId: "missing"})
@@ -142,7 +142,7 @@ func TestHandler_InitUpload_Success(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	store.EXPECT().
 		CreateMultipartUpload(mock.Anything, mock.AnythingOfType("string")).
@@ -154,7 +154,7 @@ func TestHandler_InitUpload_Success(t *testing.T) {
 		Save(mock.Anything, mock.AnythingOfType("*video.Video")).
 		Return(nil)
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	body := api.UploadInitRequest{
 		Title:       "My Video",
@@ -182,9 +182,9 @@ func TestHandler_InitUpload_FileTooLarge(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	body := api.UploadInitRequest{
 		Title:       "Big Video",
@@ -208,7 +208,7 @@ func TestHandler_ConfirmChunk_Success(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	vid := &video.Video{
 		ID:          "vid-1",
@@ -221,7 +221,7 @@ func TestHandler_ConfirmChunk_Success(t *testing.T) {
 	repo.EXPECT().FindByID(mock.Anything, video.VideoID("vid-1")).Return(vid, nil)
 	repo.EXPECT().Save(mock.Anything, mock.AnythingOfType("*video.Video")).Return(nil)
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	body := api.ConfirmChunkRequest{PartNumber: 1, ETag: "etag1"}
 
@@ -242,11 +242,11 @@ func TestHandler_ConfirmChunk_VideoNotFound(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	repo.EXPECT().FindByID(mock.Anything, video.VideoID("missing")).Return(nil, nil)
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	body := api.ConfirmChunkRequest{PartNumber: 1, ETag: "etag1"}
 
@@ -265,7 +265,7 @@ func TestHandler_CompleteUpload_Success(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	vid := &video.Video{
 		ID:          "vid-1",
@@ -282,11 +282,11 @@ func TestHandler_CompleteUpload_Success(t *testing.T) {
 	repo.EXPECT().Save(mock.Anything, mock.MatchedBy(func(v *video.Video) bool {
 		return v.Status == video.StatusProcessing
 	})).Return(nil)
-	queue.EXPECT().
-		SendMessage(mock.Anything, `{"videoId":"vid-1","s3Key":"raw/vid-1/original"}`, "vid-1").
+	publisher.EXPECT().
+		Publish(mock.Anything, video.VideoUploadedEvent{VideoID: "vid-1", S3Key: "raw/vid-1/original"}).
 		Return(nil)
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	body := api.CompleteUploadRequest{UploadId: "mpu-1"}
 
@@ -304,11 +304,11 @@ func TestHandler_CompleteUpload_VideoNotFound(t *testing.T) {
 	repo := mocks.NewMockVideoRepository(t)
 	store := mocks.NewMockObjectStore(t)
 	cache := mocks.NewMockCache(t)
-	queue := mocks.NewMockQueue(t)
+	publisher := mocks.NewMockEventPublisher(t)
 
 	repo.EXPECT().FindByID(mock.Anything, video.VideoID("missing")).Return(nil, nil)
 
-	h := newTestHandler(repo, store, cache, queue)
+	h := newTestHandler(repo, store, cache, publisher)
 
 	body := api.CompleteUploadRequest{UploadId: "mpu-1"}
 
