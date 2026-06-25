@@ -60,6 +60,6 @@ func main() {
 	processVideo := application.NewProcessVideo(store, transcoder, publisher)
 
 	// Inbound adapter
-	consumer := sqsjobs.NewConsumer(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.SQSQueueURL, processVideo)
+	consumer := sqsjobs.NewConsumer(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.SQSQueueURL, processVideo, publisher)
 	consumer.Start(context.Background())
 }

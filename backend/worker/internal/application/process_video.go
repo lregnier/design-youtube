@@ -37,14 +37,12 @@ func (uc ProcessVideo) Execute(ctx context.Context, job processing.ProcessingJob
 
 	rawPath := tmpDir + "/original"
 	if err := uc.storage.DownloadRaw(ctx, job.VideoID, rawPath); err != nil {
-		uc.publisher.PublishFailed(ctx, job.VideoID, fmt.Sprintf("download failed: %v", err))
-		return nil
+		return fmt.Errorf("download failed: %w", err)
 	}
 
 	duration, err := uc.transcoder.Duration(ctx, rawPath)
 	if err != nil {
-		uc.publisher.PublishFailed(ctx, job.VideoID, fmt.Sprintf("ffprobe failed: %v", err))
-		return nil
+		return fmt.Errorf("ffprobe failed: %w", err)
 	}
 
 	segDir := tmpDir + "/segments"
@@ -58,8 +56,7 @@ func (uc ProcessVideo) Execute(ctx context.Context, job processing.ProcessingJob
 			return err
 		}
 		if err := uc.transcoder.TranscodeHLS(ctx, rawPath, outDir, q.scale, q.bitrate); err != nil {
-			uc.publisher.PublishFailed(ctx, job.VideoID, fmt.Sprintf("transcode %s failed: %v", q.name, err))
-			return nil
+			return fmt.Errorf("transcode %s failed: %w", q.name, err)
 		}
 	}
 

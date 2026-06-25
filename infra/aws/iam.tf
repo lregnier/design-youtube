@@ -112,6 +112,11 @@ resource "aws_iam_role_policy" "worker_task" {
         Action  = ["sqs:SendMessage"]
         Resource = [aws_sqs_queue.video_processing_results.arn]
       },
+      {
+        Effect   = "Allow"
+        Action   = ["sqs:GetQueueAttributes"]
+        Resource = [aws_sqs_queue.video_processing_dlq.arn]
+      },
     ]
   })
 }
