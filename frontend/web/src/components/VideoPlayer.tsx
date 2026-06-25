@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import Hls, { Level } from "hls.js";
+import { useEffect, useRef } from "react";
+import Hls from "hls.js";
+import Plyr from "plyr";
+import "plyr/dist/plyr.css";
 
 interface Props {
   manifestUrl: string;
@@ -9,119 +11,63 @@ interface Props {
 
 export function VideoPlayer({ manifestUrl, thumbnailUrl, title }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
-  const [levels, setLevels] = useState<Level[]>([]);
-  const [selectedLevel, setSelectedLevel] = useState<number>(-1);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
+    let hls: Hls | null = null;
+    let plyr: Plyr | null = null;
+
     if (Hls.isSupported()) {
-      const hls = new Hls();
-      hlsRef.current = hls;
+      hls = new Hls();
       hls.loadSource(manifestUrl);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setLevels(hls.levels);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        const qualities = [0, ...data.levels.map((l) => l.height)];
+
+        plyr = new Plyr(video, {
+          controls: ["play", "progress", "current-time", "mute", "volume", "settings", "fullscreen"],
+          settings: ["quality"],
+          i18n: { qualityLabel: { 0: "Auto" } },
+          quality: {
+            default: 0,
+            options: qualities,
+            forced: true,
+            onChange: (quality: number) => {
+              if (!hls) return;
+              if (quality === 0) {
+                hls.currentLevel = -1;
+              } else {
+                const idx = data.levels.findIndex((l) => l.height === quality);
+                if (idx !== -1) hls!.currentLevel = idx;
+              }
+            },
+          },
+        });
       });
-      return () => {
-        hls.destroy();
-        hlsRef.current = null;
-        setLevels([]);
-        setSelectedLevel(-1);
-      };
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = manifestUrl;
+      plyr = new Plyr(video, {
+        controls: ["play", "progress", "current-time", "mute", "volume", "fullscreen"],
+      });
     }
+
+    return () => {
+      plyr?.destroy();
+      hls?.destroy();
+    };
   }, [manifestUrl]);
 
-  function selectLevel(index: number) {
-    const hls = hlsRef.current;
-    if (hls) hls.currentLevel = index;
-    setSelectedLevel(index);
-    setIsOpen(false);
-  }
-
-  const activeLabel = selectedLevel === -1 ? "Auto" : `${levels[selectedLevel]?.height}p`;
-
   return (
-    <div style={{ position: "relative", width: "100%", background: "#000" }}>
+    <div style={{ width: "100%", background: "#000" }}>
       <video
         ref={videoRef}
-        controls
         poster={thumbnailUrl}
         aria-label={title}
-        style={{ width: "100%", maxHeight: "70vh", display: "block" }}
+        style={{ width: "100%", display: "block" }}
       />
-
-      {levels.length > 0 && (
-        <div style={{ position: "absolute", bottom: 48, right: 12, zIndex: 10 }}>
-          {isOpen && (
-            <ul style={{
-              listStyle: "none",
-              margin: 0,
-              padding: "4px 0",
-              background: "rgba(0,0,0,0.85)",
-              borderRadius: 4,
-              marginBottom: 4,
-              minWidth: 80,
-            }}>
-              <li>
-                <button
-                  onClick={() => selectLevel(-1)}
-                  style={itemStyle(selectedLevel === -1)}
-                >
-                  Auto
-                </button>
-              </li>
-              {levels.map((level, i) => (
-                <li key={i}>
-                  <button
-                    onClick={() => selectLevel(i)}
-                    style={itemStyle(selectedLevel === i)}
-                  >
-                    {level.height}p
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <button
-            onClick={() => setIsOpen((o) => !o)}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "4px 10px",
-              background: "rgba(0,0,0,0.75)",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.3)",
-              borderRadius: 4,
-              cursor: "pointer",
-              fontSize: 13,
-              fontWeight: 600,
-            }}
-          >
-            {activeLabel}
-          </button>
-        </div>
-      )}
     </div>
   );
-}
-
-function itemStyle(active: boolean): React.CSSProperties {
-  return {
-    display: "block",
-    width: "100%",
-    padding: "6px 14px",
-    background: "none",
-    color: active ? "#fff" : "rgba(255,255,255,0.65)",
-    fontWeight: active ? 700 : 400,
-    border: "none",
-    cursor: "pointer",
-    fontSize: 13,
-    textAlign: "left",
-  };
 }
