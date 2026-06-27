@@ -1,6 +1,19 @@
 package application
 
-import "context"
+import (
+	"context"
+
+	"github.com/lregnier/design-youtube/api/internal/domain/video"
+)
+
+type Cache interface {
+	Get(ctx context.Context, key string) ([]byte, error)
+	Set(ctx context.Context, key string, value []byte) error
+}
+
+type EventPublisher interface {
+	Publish(ctx context.Context, event video.DomainEvent) error
+}
 
 type MultipartUpload struct {
 	UploadID string
