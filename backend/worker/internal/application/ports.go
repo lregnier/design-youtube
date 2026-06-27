@@ -1,6 +1,10 @@
-package ports
+package application
 
-import "context"
+import (
+	"context"
+
+	"github.com/lregnier/design-youtube/worker/internal/domain/processing"
+)
 
 type VideoStorage interface {
 	DownloadRaw(ctx context.Context, videoID, destPath string) error
@@ -15,7 +19,6 @@ type Transcoder interface {
 	ExtractThumbnail(ctx context.Context, inputPath string, offset float64) ([]byte, error)
 }
 
-type ResultPublisher interface {
-	PublishProcessed(ctx context.Context, videoID, manifestURL, thumbnailURL string) error
-	PublishFailed(ctx context.Context, videoID, reason string) error
+type EventPublisher interface {
+	Publish(ctx context.Context, event processing.DomainEvent) error
 }

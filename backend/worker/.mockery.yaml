@@ -3,10 +3,11 @@ disable-version-string: true
 with-expecter: true
 issue-845-fix: true
 outpkg: mocks
-dir: internal/mocks
+dir: gen/mocks
 packages:
-  github.com/lregnier/design-youtube/worker/internal/ports:
+  github.com/lregnier/design-youtube/worker/internal/application:
     interfaces:
       VideoStorage:
       Transcoder:
-      ResultPublisher:
+      EventPublisher:
+      ProcessVideo:

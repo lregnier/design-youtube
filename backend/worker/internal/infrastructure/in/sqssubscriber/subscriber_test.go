@@ -1,4 +1,4 @@
-package sqsjobs
+package sqssubscriber
 
 import (
 	"testing"

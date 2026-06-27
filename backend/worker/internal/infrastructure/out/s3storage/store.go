@@ -10,10 +10,10 @@ import (
 
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"github.com/lregnier/design-youtube/worker/internal/ports"
+	"github.com/lregnier/design-youtube/worker/internal/application"
 )
 
-var _ ports.VideoStorage = (*Store)(nil)
+var _ application.VideoStorage = (*Store)(nil)
 
 type Store struct {
 	client     *awss3.Client

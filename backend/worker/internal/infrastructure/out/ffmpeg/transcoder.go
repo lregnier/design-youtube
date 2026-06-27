@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lregnier/design-youtube/worker/internal/ports"
+	"github.com/lregnier/design-youtube/worker/internal/application"
 )
 
-var _ ports.Transcoder = (*Transcoder)(nil)
+var _ application.Transcoder = (*Transcoder)(nil)
 
 type Transcoder struct{}
 

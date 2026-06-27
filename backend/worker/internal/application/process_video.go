@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/lregnier/design-youtube/worker/internal/domain/processing"
-	"github.com/lregnier/design-youtube/worker/internal/ports"
 )
 
 var qualities = []struct{ name, scale, bitrate string }{
@@ -16,17 +15,23 @@ var qualities = []struct{ name, scale, bitrate string }{
 	{"360p", "640:360", "800k"},
 }
 
-type ProcessVideo struct {
-	storage   ports.VideoStorage
-	transcoder ports.Transcoder
-	publisher  ports.ResultPublisher
+type ProcessVideo interface {
+	Execute(ctx context.Context, job processing.ProcessingJob) error
 }
 
-func NewProcessVideo(storage ports.VideoStorage, transcoder ports.Transcoder, publisher ports.ResultPublisher) ProcessVideo {
-	return ProcessVideo{storage: storage, transcoder: transcoder, publisher: publisher}
+var _ ProcessVideo = (*processVideo)(nil)
+
+type processVideo struct {
+	storage    VideoStorage
+	transcoder Transcoder
+	publisher  EventPublisher
 }
 
-func (uc ProcessVideo) Execute(ctx context.Context, job processing.ProcessingJob) error {
+func NewProcessVideo(storage VideoStorage, transcoder Transcoder, publisher EventPublisher) ProcessVideo {
+	return &processVideo{storage: storage, transcoder: transcoder, publisher: publisher}
+}
+
+func (uc *processVideo) Execute(ctx context.Context, job processing.ProcessingJob) error {
 	log.Printf("processing videoId=%s", job.VideoID)
 
 	tmpDir, err := os.MkdirTemp("", "video-"+job.VideoID+"-*")
@@ -77,7 +82,11 @@ func (uc ProcessVideo) Execute(ctx context.Context, job processing.ProcessingJob
 		thumbnailURL, _ = uc.storage.UploadThumbnail(ctx, job.VideoID, thumbData)
 	}
 
-	if err := uc.publisher.PublishProcessed(ctx, job.VideoID, manifestURL, thumbnailURL); err != nil {
+	if err := uc.publisher.Publish(ctx, processing.VideoProcessingSucceededEvent{
+		VideoID:      job.VideoID,
+		ManifestURL:  manifestURL,
+		ThumbnailURL: thumbnailURL,
+	}); err != nil {
 		return fmt.Errorf("publish processed: %w", err)
 	}
 

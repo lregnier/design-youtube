@@ -9,16 +9,15 @@ import (
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 
-	"github.com/lregnier/design-youtube/worker/internal/adapters/inbound/sqsjobs"
-	"github.com/lregnier/design-youtube/worker/internal/adapters/outbound/ffmpeg"
-	"github.com/lregnier/design-youtube/worker/internal/adapters/outbound/s3storage"
-	"github.com/lregnier/design-youtube/worker/internal/adapters/outbound/sqspublisher"
 	"github.com/lregnier/design-youtube/worker/internal/application"
-	"github.com/lregnier/design-youtube/worker/internal/config"
+	"github.com/lregnier/design-youtube/worker/internal/infrastructure/in/sqssubscriber"
+	"github.com/lregnier/design-youtube/worker/internal/infrastructure/out/ffmpeg"
+	"github.com/lregnier/design-youtube/worker/internal/infrastructure/out/s3storage"
+	"github.com/lregnier/design-youtube/worker/internal/infrastructure/out/sqspublisher"
 )
 
 func main() {
-	cfg, err := config.Load()
+	cfg, err := Load()
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
@@ -60,6 +59,6 @@ func main() {
 	processVideo := application.NewProcessVideo(store, transcoder, publisher)
 
 	// Inbound adapter
-	consumer := sqsjobs.NewConsumer(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.SQSQueueURL, processVideo, publisher)
-	consumer.Start(context.Background())
+	subscriber := sqssubscriber.NewSubscriber(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.SQSQueueURL, processVideo, publisher)
+	subscriber.Start(context.Background())
 }
