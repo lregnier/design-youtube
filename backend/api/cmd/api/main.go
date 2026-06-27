@@ -13,7 +13,6 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/lregnier/design-youtube/api/internal/application"
-	"github.com/lregnier/design-youtube/api/internal/config"
 	httpadapter "github.com/lregnier/design-youtube/api/internal/infrastructure/in/http"
 	"github.com/lregnier/design-youtube/api/internal/infrastructure/in/sqssubscriber"
 	"github.com/lregnier/design-youtube/api/internal/infrastructure/out/dynamo"
@@ -23,7 +22,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.Load()
+	cfg, err := Load()
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
