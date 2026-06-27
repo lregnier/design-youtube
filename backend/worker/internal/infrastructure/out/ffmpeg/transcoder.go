@@ -12,13 +12,13 @@ import (
 	"github.com/lregnier/design-youtube/worker/internal/application"
 )
 
-var _ application.Transcoder = (*Transcoder)(nil)
+var _ application.Transcoder = (*transcoder)(nil)
 
-type Transcoder struct{}
+type transcoder struct{}
 
-func NewTranscoder() *Transcoder { return &Transcoder{} }
+func NewTranscoder() application.Transcoder { return &transcoder{} }
 
-func (t *Transcoder) Duration(_ context.Context, inputPath string) (float64, error) {
+func (t *transcoder) Duration(_ context.Context, inputPath string) (float64, error) {
 	out, err := exec.Command("ffprobe", "-v", "error",
 		"-show_entries", "format=duration",
 		"-of", "default=noprint_wrappers=1:nokey=1",
@@ -33,7 +33,7 @@ func (t *Transcoder) Duration(_ context.Context, inputPath string) (float64, err
 	return d, nil
 }
 
-func (t *Transcoder) TranscodeHLS(_ context.Context, inputPath, outputDir, scale, bitrate string) error {
+func (t *transcoder) TranscodeHLS(_ context.Context, inputPath, outputDir, scale, bitrate string) error {
 	playlist := filepath.Join(outputDir, "media.m3u8")
 	segment := filepath.Join(outputDir, "seg%03d.ts")
 	cmd := exec.Command("ffmpeg", "-i", inputPath,
@@ -50,7 +50,7 @@ func (t *Transcoder) TranscodeHLS(_ context.Context, inputPath, outputDir, scale
 	return nil
 }
 
-func (t *Transcoder) ExtractThumbnail(_ context.Context, inputPath string, offset float64) ([]byte, error) {
+func (t *transcoder) ExtractThumbnail(_ context.Context, inputPath string, offset float64) ([]byte, error) {
 	tmp, err := os.CreateTemp("", "thumb-*.jpg")
 	if err != nil {
 		return nil, fmt.Errorf("temp file: %w", err)

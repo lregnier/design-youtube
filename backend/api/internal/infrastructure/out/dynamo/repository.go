@@ -13,7 +13,7 @@ import (
 	"github.com/lregnier/design-youtube/api/internal/domain/video"
 )
 
-var _ video.VideoRepository = (*Repository)(nil)
+var _ video.VideoRepository = (*repository)(nil)
 
 type record struct {
 	VideoID      string        `dynamodbav:"videoId"`
@@ -34,16 +34,16 @@ type chunkRecord struct {
 	ETag       string `dynamodbav:"eTag,omitempty"`
 }
 
-type Repository struct {
+type repository struct {
 	client    *dynamodb.Client
 	tableName string
 }
 
-func NewRepository(client *dynamodb.Client, tableName string) *Repository {
-	return &Repository{client: client, tableName: tableName}
+func NewRepository(client *dynamodb.Client, tableName string) video.VideoRepository {
+	return &repository{client: client, tableName: tableName}
 }
 
-func (r *Repository) Save(ctx context.Context, v *video.Video) error {
+func (r *repository) Save(ctx context.Context, v *video.Video) error {
 	rec := toRecord(v)
 	item, err := attributevalue.MarshalMap(rec)
 	if err != nil {
@@ -56,7 +56,7 @@ func (r *Repository) Save(ctx context.Context, v *video.Video) error {
 	return err
 }
 
-func (r *Repository) FindByID(ctx context.Context, id video.VideoID) (*video.Video, error) {
+func (r *repository) FindByID(ctx context.Context, id video.VideoID) (*video.Video, error) {
 	out, err := r.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: &r.tableName,
 		Key: map[string]types.AttributeValue{
@@ -76,7 +76,7 @@ func (r *Repository) FindByID(ctx context.Context, id video.VideoID) (*video.Vid
 	return toDomain(&rec), nil
 }
 
-func (r *Repository) List(ctx context.Context) ([]*video.Video, error) {
+func (r *repository) List(ctx context.Context) ([]*video.Video, error) {
 	out, err := r.client.Scan(ctx, &dynamodb.ScanInput{
 		TableName:        &r.tableName,
 		FilterExpression: aws.String("#st <> :uploading"),

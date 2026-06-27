@@ -12,19 +12,19 @@ import (
 	"github.com/lregnier/design-youtube/api/internal/application"
 )
 
-var _ application.ObjectStore = (*Store)(nil)
+var _ application.ObjectStore = (*store)(nil)
 
-type Store struct {
+type store struct {
 	client      *awss3.Client
 	bucket      string
 	transformer PresignedURLTransformer
 }
 
-func NewStore(client *awss3.Client, bucket string, transformer PresignedURLTransformer) *Store {
-	return &Store{client: client, bucket: bucket, transformer: transformer}
+func NewStore(client *awss3.Client, bucket string, transformer PresignedURLTransformer) application.ObjectStore {
+	return &store{client: client, bucket: bucket, transformer: transformer}
 }
 
-func (s *Store) CreateMultipartUpload(ctx context.Context, key string) (*application.MultipartUpload, error) {
+func (s *store) CreateMultipartUpload(ctx context.Context, key string) (*application.MultipartUpload, error) {
 	out, err := s.client.CreateMultipartUpload(ctx, &awss3.CreateMultipartUploadInput{
 		Bucket: &s.bucket,
 		Key:    &key,
@@ -35,7 +35,7 @@ func (s *Store) CreateMultipartUpload(ctx context.Context, key string) (*applica
 	return &application.MultipartUpload{UploadID: *out.UploadId, Key: key}, nil
 }
 
-func (s *Store) PresignUploadPart(ctx context.Context, key, uploadID string, partNumber int) (*application.PresignedURL, error) {
+func (s *store) PresignUploadPart(ctx context.Context, key, uploadID string, partNumber int) (*application.PresignedURL, error) {
 	presigner := awss3.NewPresignClient(s.client)
 	pn := int32(partNumber)
 	out, err := presigner.PresignUploadPart(ctx, &awss3.UploadPartInput{
@@ -51,7 +51,7 @@ func (s *Store) PresignUploadPart(ctx context.Context, key, uploadID string, par
 	return &application.PresignedURL{URL: presignedURL, PartNumber: partNumber}, nil
 }
 
-func (s *Store) CompleteMultipartUpload(ctx context.Context, key, uploadID string, parts []application.CompletedPart) error {
+func (s *store) CompleteMultipartUpload(ctx context.Context, key, uploadID string, parts []application.CompletedPart) error {
 	completed := make([]s3types.CompletedPart, len(parts))
 	for i, p := range parts {
 		pn := int32(p.PartNumber)

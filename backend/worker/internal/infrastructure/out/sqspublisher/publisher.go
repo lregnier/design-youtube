@@ -11,15 +11,15 @@ import (
 	"github.com/lregnier/design-youtube/worker/internal/domain/processing"
 )
 
-var _ application.EventPublisher = (*Publisher)(nil)
+var _ application.EventPublisher = (*publisher)(nil)
 
-type Publisher struct {
+type publisher struct {
 	client   *sqs.Client
 	queueURL string
 }
 
-func NewPublisher(client *sqs.Client, queueURL string) *Publisher {
-	return &Publisher{client: client, queueURL: queueURL}
+func NewPublisher(client *sqs.Client, queueURL string) application.EventPublisher {
+	return &publisher{client: client, queueURL: queueURL}
 }
 
 type videoProcessedMessage struct {
@@ -35,7 +35,7 @@ type videoFailedMessage struct {
 	Reason    string `json:"reason"`
 }
 
-func (p *Publisher) Publish(ctx context.Context, event processing.DomainEvent) error {
+func (p *publisher) Publish(ctx context.Context, event processing.DomainEvent) error {
 	switch evt := event.(type) {
 	case processing.VideoProcessingSucceededEvent:
 		return p.emit(ctx, evt.VideoID, videoProcessedMessage{
@@ -55,7 +55,7 @@ func (p *Publisher) Publish(ctx context.Context, event processing.DomainEvent) e
 	}
 }
 
-func (p *Publisher) emit(ctx context.Context, videoID string, payload any) error {
+func (p *publisher) emit(ctx context.Context, videoID string, payload any) error {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("marshal event: %w", err)

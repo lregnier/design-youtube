@@ -13,23 +13,23 @@ import (
 	"github.com/lregnier/design-youtube/worker/internal/application"
 )
 
-var _ application.VideoStorage = (*Store)(nil)
+var _ application.VideoStorage = (*store)(nil)
 
-type Store struct {
+type store struct {
 	client     *awss3.Client
 	bucket     string
 	urlBuilder PublicURLBuilder
 }
 
-func NewStore(client *awss3.Client, bucket string, urlBuilder PublicURLBuilder) *Store {
-	return &Store{client: client, bucket: bucket, urlBuilder: urlBuilder}
+func NewStore(client *awss3.Client, bucket string, urlBuilder PublicURLBuilder) application.VideoStorage {
+	return &store{client: client, bucket: bucket, urlBuilder: urlBuilder}
 }
 
-func (s *Store) assetURL(key string) string {
+func (s *store) assetURL(key string) string {
 	return s.urlBuilder.AssetURL(s.bucket, key)
 }
 
-func (s *Store) DownloadRaw(ctx context.Context, videoID, destPath string) error {
+func (s *store) DownloadRaw(ctx context.Context, videoID, destPath string) error {
 	key := fmt.Sprintf("raw/%s/original", videoID)
 	out, err := s.client.GetObject(ctx, &awss3.GetObjectInput{Bucket: &s.bucket, Key: &key})
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *Store) DownloadRaw(ctx context.Context, videoID, destPath string) error
 	return nil
 }
 
-func (s *Store) UploadSegments(ctx context.Context, videoID, segDir string) error {
+func (s *store) UploadSegments(ctx context.Context, videoID, segDir string) error {
 	return filepath.Walk(segDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return err
@@ -73,7 +73,7 @@ func (s *Store) UploadSegments(ctx context.Context, videoID, segDir string) erro
 	})
 }
 
-func (s *Store) UploadManifest(ctx context.Context, videoID string, content []byte) (string, error) {
+func (s *store) UploadManifest(ctx context.Context, videoID string, content []byte) (string, error) {
 	key := fmt.Sprintf("manifests/%s/master.m3u8", videoID)
 	if err := s.putObject(ctx, key, content, "application/x-mpegURL"); err != nil {
 		return "", err
@@ -81,7 +81,7 @@ func (s *Store) UploadManifest(ctx context.Context, videoID string, content []by
 	return s.assetURL(key), nil
 }
 
-func (s *Store) UploadThumbnail(ctx context.Context, videoID string, data []byte) (string, error) {
+func (s *store) UploadThumbnail(ctx context.Context, videoID string, data []byte) (string, error) {
 	key := fmt.Sprintf("thumbnails/%s/thumb.jpg", videoID)
 	if err := s.putObject(ctx, key, data, "image/jpeg"); err != nil {
 		return "", err
@@ -89,7 +89,7 @@ func (s *Store) UploadThumbnail(ctx context.Context, videoID string, data []byte
 	return s.assetURL(key), nil
 }
 
-func (s *Store) putObject(ctx context.Context, key string, data []byte, contentType string) error {
+func (s *store) putObject(ctx context.Context, key string, data []byte, contentType string) error {
 	_, err := s.client.PutObject(ctx, &awss3.PutObjectInput{
 		Bucket:      &s.bucket,
 		Key:         &key,
