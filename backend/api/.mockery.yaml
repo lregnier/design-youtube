@@ -8,8 +8,11 @@ packages:
   github.com/lregnier/design-youtube/api/internal/domain/video:
     interfaces:
       VideoRepository:
-  github.com/lregnier/design-youtube/api/internal/ports:
+  github.com/lregnier/design-youtube/api/internal/application:
     interfaces:
       ObjectStore:
-      Cache:
       EventPublisher:
+      Cache:
+      UploadService:
+      CatalogService:
+      ProcessingService:

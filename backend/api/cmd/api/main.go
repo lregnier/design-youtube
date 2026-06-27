@@ -12,16 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/redis/go-redis/v9"
 
-	httpadapter "github.com/lregnier/design-youtube/api/internal/adapters/inbound/http"
-	"github.com/lregnier/design-youtube/api/internal/adapters/inbound/sqsconsumer"
-	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/dynamo"
-	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/rediscache"
-	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/s3store"
-	"github.com/lregnier/design-youtube/api/internal/adapters/outbound/sqspublisher"
-	"github.com/lregnier/design-youtube/api/internal/application/catalog"
-	"github.com/lregnier/design-youtube/api/internal/application/processing"
-	"github.com/lregnier/design-youtube/api/internal/application/upload"
+	"github.com/lregnier/design-youtube/api/internal/application"
 	"github.com/lregnier/design-youtube/api/internal/config"
+	httpadapter "github.com/lregnier/design-youtube/api/internal/infrastructure/in/http"
+	"github.com/lregnier/design-youtube/api/internal/infrastructure/in/sqssubscriber"
+	"github.com/lregnier/design-youtube/api/internal/infrastructure/out/dynamo"
+	"github.com/lregnier/design-youtube/api/internal/infrastructure/out/rediscache"
+	"github.com/lregnier/design-youtube/api/internal/infrastructure/out/s3store"
+	"github.com/lregnier/design-youtube/api/internal/infrastructure/out/sqspublisher"
 )
 
 func main() {
@@ -37,7 +35,7 @@ func main() {
 		log.Fatalf("aws config: %v", err)
 	}
 
-	// Outbound adapters
+	// Infrastructure — outbound
 	dynamoOpts := []func(*dynamodb.Options){}
 	if cfg.DynamoDBEndpoint != "" {
 		dynamoOpts = append(dynamoOpts, func(o *dynamodb.Options) {
@@ -70,20 +68,17 @@ func main() {
 	sqsClient := sqs.NewFromConfig(awsCfg, sqsOpts...)
 	publisher := sqspublisher.NewPublisher(sqsClient, cfg.SQSQueueURL)
 
-	// Use cases
-	initUC := upload.NewInitUpload(repo, store, cfg.S3Bucket)
-	confirmUC := upload.NewConfirmChunk(repo, store)
-	completeUC := upload.NewCompleteUpload(repo, store, publisher)
-	getVideoUC := catalog.NewGetVideo(repo, cache)
-	listVideosUC := catalog.NewListVideos(repo)
-	applyResultUC := processing.NewApplyProcessingResult(repo)
+	// Application services
+	uploadSvc := application.NewUploadService(repo, store, publisher, cfg.S3Bucket)
+	catalogSvc := application.NewCatalogService(repo, cache)
+	processingSvc := application.NewProcessingService(repo)
 
-	// Inbound adapters
-	h := httpadapter.NewHandler(initUC, confirmUC, completeUC, getVideoUC, listVideosUC)
+	// Infrastructure — inbound
+	h := httpadapter.NewHandler(uploadSvc, catalogSvc)
 	srv := httpadapter.NewServer(h, cfg.UploadSecret, strings.Split(cfg.CORSAllowedOrigins, ","), cfg.HTTPAddr)
 
-	consumer := sqsconsumer.NewConsumer(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.ResultsQueueURL, applyResultUC)
-	go consumer.Start(context.Background())
+	subscriber := sqssubscriber.NewSubscriber(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.ResultsQueueURL, processingSvc)
+	go subscriber.Start(context.Background())
 
 	if err := srv.Start(); err != nil {
 		log.Fatalf("server: %v", err)

@@ -5,7 +5,8 @@ package mocks
 import (
 	context "context"
 
-	ports "github.com/lregnier/design-youtube/api/internal/ports"
+	application "github.com/lregnier/design-youtube/api/internal/application"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,7 +24,7 @@ func (_m *MockObjectStore) EXPECT() *MockObjectStore_Expecter {
 }
 
 // CompleteMultipartUpload provides a mock function with given fields: ctx, key, uploadID, parts
-func (_m *MockObjectStore) CompleteMultipartUpload(ctx context.Context, key string, uploadID string, parts []ports.CompletedPart) error {
+func (_m *MockObjectStore) CompleteMultipartUpload(ctx context.Context, key string, uploadID string, parts []application.CompletedPart) error {
 	ret := _m.Called(ctx, key, uploadID, parts)
 
 	if len(ret) == 0 {
@@ -31,7 +32,7 @@ func (_m *MockObjectStore) CompleteMultipartUpload(ctx context.Context, key stri
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []ports.CompletedPart) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []application.CompletedPart) error); ok {
 		r0 = rf(ctx, key, uploadID, parts)
 	} else {
 		r0 = ret.Error(0)
@@ -49,14 +50,14 @@ type MockObjectStore_CompleteMultipartUpload_Call struct {
 //   - ctx context.Context
 //   - key string
 //   - uploadID string
-//   - parts []ports.CompletedPart
+//   - parts []application.CompletedPart
 func (_e *MockObjectStore_Expecter) CompleteMultipartUpload(ctx interface{}, key interface{}, uploadID interface{}, parts interface{}) *MockObjectStore_CompleteMultipartUpload_Call {
 	return &MockObjectStore_CompleteMultipartUpload_Call{Call: _e.mock.On("CompleteMultipartUpload", ctx, key, uploadID, parts)}
 }
 
-func (_c *MockObjectStore_CompleteMultipartUpload_Call) Run(run func(ctx context.Context, key string, uploadID string, parts []ports.CompletedPart)) *MockObjectStore_CompleteMultipartUpload_Call {
+func (_c *MockObjectStore_CompleteMultipartUpload_Call) Run(run func(ctx context.Context, key string, uploadID string, parts []application.CompletedPart)) *MockObjectStore_CompleteMultipartUpload_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]ports.CompletedPart))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]application.CompletedPart))
 	})
 	return _c
 }
@@ -66,29 +67,29 @@ func (_c *MockObjectStore_CompleteMultipartUpload_Call) Return(_a0 error) *MockO
 	return _c
 }
 
-func (_c *MockObjectStore_CompleteMultipartUpload_Call) RunAndReturn(run func(context.Context, string, string, []ports.CompletedPart) error) *MockObjectStore_CompleteMultipartUpload_Call {
+func (_c *MockObjectStore_CompleteMultipartUpload_Call) RunAndReturn(run func(context.Context, string, string, []application.CompletedPart) error) *MockObjectStore_CompleteMultipartUpload_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // CreateMultipartUpload provides a mock function with given fields: ctx, key
-func (_m *MockObjectStore) CreateMultipartUpload(ctx context.Context, key string) (*ports.MultipartUpload, error) {
+func (_m *MockObjectStore) CreateMultipartUpload(ctx context.Context, key string) (*application.MultipartUpload, error) {
 	ret := _m.Called(ctx, key)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateMultipartUpload")
 	}
 
-	var r0 *ports.MultipartUpload
+	var r0 *application.MultipartUpload
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*ports.MultipartUpload, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*application.MultipartUpload, error)); ok {
 		return rf(ctx, key)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *ports.MultipartUpload); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) *application.MultipartUpload); ok {
 		r0 = rf(ctx, key)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ports.MultipartUpload)
+			r0 = ret.Get(0).(*application.MultipartUpload)
 		}
 	}
 
@@ -120,34 +121,34 @@ func (_c *MockObjectStore_CreateMultipartUpload_Call) Run(run func(ctx context.C
 	return _c
 }
 
-func (_c *MockObjectStore_CreateMultipartUpload_Call) Return(_a0 *ports.MultipartUpload, _a1 error) *MockObjectStore_CreateMultipartUpload_Call {
+func (_c *MockObjectStore_CreateMultipartUpload_Call) Return(_a0 *application.MultipartUpload, _a1 error) *MockObjectStore_CreateMultipartUpload_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockObjectStore_CreateMultipartUpload_Call) RunAndReturn(run func(context.Context, string) (*ports.MultipartUpload, error)) *MockObjectStore_CreateMultipartUpload_Call {
+func (_c *MockObjectStore_CreateMultipartUpload_Call) RunAndReturn(run func(context.Context, string) (*application.MultipartUpload, error)) *MockObjectStore_CreateMultipartUpload_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // PresignUploadPart provides a mock function with given fields: ctx, key, uploadID, partNumber
-func (_m *MockObjectStore) PresignUploadPart(ctx context.Context, key string, uploadID string, partNumber int) (*ports.PresignedURL, error) {
+func (_m *MockObjectStore) PresignUploadPart(ctx context.Context, key string, uploadID string, partNumber int) (*application.PresignedURL, error) {
 	ret := _m.Called(ctx, key, uploadID, partNumber)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PresignUploadPart")
 	}
 
-	var r0 *ports.PresignedURL
+	var r0 *application.PresignedURL
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, int) (*ports.PresignedURL, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int) (*application.PresignedURL, error)); ok {
 		return rf(ctx, key, uploadID, partNumber)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, int) *ports.PresignedURL); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int) *application.PresignedURL); ok {
 		r0 = rf(ctx, key, uploadID, partNumber)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ports.PresignedURL)
+			r0 = ret.Get(0).(*application.PresignedURL)
 		}
 	}
 
@@ -181,12 +182,12 @@ func (_c *MockObjectStore_PresignUploadPart_Call) Run(run func(ctx context.Conte
 	return _c
 }
 
-func (_c *MockObjectStore_PresignUploadPart_Call) Return(_a0 *ports.PresignedURL, _a1 error) *MockObjectStore_PresignUploadPart_Call {
+func (_c *MockObjectStore_PresignUploadPart_Call) Return(_a0 *application.PresignedURL, _a1 error) *MockObjectStore_PresignUploadPart_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockObjectStore_PresignUploadPart_Call) RunAndReturn(run func(context.Context, string, string, int) (*ports.PresignedURL, error)) *MockObjectStore_PresignUploadPart_Call {
+func (_c *MockObjectStore_PresignUploadPart_Call) RunAndReturn(run func(context.Context, string, string, int) (*application.PresignedURL, error)) *MockObjectStore_PresignUploadPart_Call {
 	_c.Call.Return(run)
 	return _c
 }

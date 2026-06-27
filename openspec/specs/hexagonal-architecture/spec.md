@@ -8,18 +8,18 @@ The `internal/domain/` package SHALL import only the Go standard library. No AWS
 - **THEN** the build succeeds with no imports from `github.com/aws`, `github.com/redis`, or `github.com/go-chi`
 
 ### Requirement: Application layer depends only on domain and port interfaces
-The `internal/application/` package SHALL import `internal/domain/` and `internal/ports/` only. It SHALL NOT import any adapter package or AWS SDK directly.
+The `internal/application/` package SHALL be a single flat package (no subdirectories). It SHALL import `internal/domain/` only. It SHALL NOT import any adapter package or AWS SDK directly. Outbound port interfaces (`ObjectStore`, `EventPublisher`, `Cache`) SHALL be defined inside `internal/application/` alongside the service interfaces that consume them.
 
 #### Scenario: Use cases are constructable with interface implementations
-- **WHEN** a use case struct is instantiated with mock implementations of its port interfaces
+- **WHEN** a service struct is instantiated with mock implementations of its port interfaces
 - **THEN** it compiles and can be called without any real infrastructure present
 
 ### Requirement: Each use case is a distinct type with an Execute method
-Each operation (InitUpload, ConfirmChunk, CompleteUpload, GetVideo, ListVideos) SHALL be implemented as a Go struct in `internal/application/` with a single public method that accepts a typed command and returns a typed result.
+Each application service (`UploadService`, `CatalogService`, `ProcessingService`) SHALL be defined as a Go interface in `internal/application/` with named methods for each operation. The concrete implementation SHALL be an unexported struct. Constructors SHALL return the interface type.
 
-#### Scenario: InitUpload use case is independently constructable
-- **WHEN** `InitUpload` is constructed with a `VideoRepository` and `ObjectStore`
-- **THEN** it can execute without knowledge of DynamoDB, S3, or HTTP specifics
+#### Scenario: UploadService is independently constructable via its interface
+- **WHEN** `NewUploadService` is called with implementations of `VideoRepository`, `ObjectStore`, `EventPublisher`, and a bucket name
+- **THEN** it returns an `UploadService` interface value that can execute without knowledge of DynamoDB, S3, or HTTP specifics
 
 ### Requirement: Outbound port interfaces are defined as minimal Go interfaces
 `VideoRepository`, `ObjectStore`, `Cache`, and `Queue` SHALL each be defined as Go interfaces with only the methods required by the application layer. No interface SHALL have more than 6 methods. No interface method SHALL be unused — every method SHALL have at least one call site in `internal/application/`.
