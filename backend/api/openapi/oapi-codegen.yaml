@@ -3,6 +3,6 @@ generate:
   chi-server: true
   models: true
   strict-server: true
-output: ../internal/gen/api/api.gen.go
+output: ../gen/api/api.gen.go
 output-options:
   skip-prune: false

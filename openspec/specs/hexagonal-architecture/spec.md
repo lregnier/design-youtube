@@ -53,19 +53,19 @@ Adapters SHALL import domain and application packages. Domain and application pa
 - **WHEN** `cmd/api/main.go` is inspected
 - **THEN** it constructs a server via `internal/adapters/inbound/http` and calls its `Start()` method, with no `chi.NewRouter`, middleware registration, route definitions, or `http.ListenAndServe` call present in `main.go`
 
-### Requirement: Generated code lives under internal/gen/
-All generated code in `backend/api` (oapi-codegen output, mockery mocks) SHALL live under `internal/gen/`, in one subdirectory per generator (`internal/gen/api/`, `internal/gen/mocks/`). Hand-written packages (`internal/domain/`, `internal/application/`, `internal/ports/`, `internal/adapters/`, `internal/config/`) SHALL NOT contain generated code.
+### Requirement: Generated code lives under gen/
+All generated code in `backend/api` (oapi-codegen output, mockery mocks) SHALL live under `gen/`, in one subdirectory per generator (`gen/api/`, `gen/mocks/`). `gen/` SHALL be a top-level directory alongside `cmd/`, `internal/`, and `openapi/`. Hand-written packages under `internal/` (`internal/domain/`, `internal/application/`, `internal/infrastructure/`) SHALL NOT contain generated code.
 
-#### Scenario: Generated packages are isolated under internal/gen
-- **WHEN** `backend/api/internal/` is inspected
-- **THEN** the oapi-codegen output is at `internal/gen/api/api.gen.go` and the mockery mocks are at `internal/gen/mocks/`, with no generated files under `internal/domain/`, `internal/application/`, `internal/ports/`, or `internal/adapters/`
+#### Scenario: Generated packages are isolated under gen/
+- **WHEN** `backend/api/` is inspected
+- **THEN** the oapi-codegen output is at `gen/api/api.gen.go` and the mockery mocks are at `gen/mocks/`, with no generated files under `internal/domain/`, `internal/application/`, or `internal/infrastructure/`
 
 ### Requirement: OpenAPI spec and codegen config live under openapi/
 The OpenAPI specification, oapi-codegen config, and `go:generate` directive for `backend/api` SHALL live at `backend/api/openapi/` (`openapi.yaml`, `oapi-codegen.yaml`, `generate.go`). No directory named `api/` SHALL exist directly under `backend/api/`.
 
 #### Scenario: OpenAPI sources are isolated under openapi/
 - **WHEN** `backend/api/` is inspected
-- **THEN** `openapi.yaml`, `oapi-codegen.yaml`, and `generate.go` are at `backend/api/openapi/`, and oapi-codegen output continues to be generated at `internal/gen/api/api.gen.go`
+- **THEN** `openapi.yaml`, `oapi-codegen.yaml`, and `generate.go` are at `backend/api/openapi/`, and oapi-codegen output is generated at `gen/api/api.gen.go`
 
 ### Requirement: Outbound adapters delegate environment-specific URL building to an injected strategy
 The `s3store` adapter in `backend/api` SHALL accept a `PresignedURLTransformer` (an interface with `Transform(presignedURL string) string`) and call it unconditionally — no if/else on `S3_PUBLIC_ENDPOINT_URL` inside the store. The composition root (`cmd/api/main.go`) SHALL select the concrete implementation (`NoOpTransformer` for production, `LocalStackTransformer` for local dev) based on config.

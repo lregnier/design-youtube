@@ -5,7 +5,7 @@ import (
 	"crypto/subtle"
 	"net/http"
 
-	"github.com/lregnier/design-youtube/api/internal/gen/api"
+	"github.com/lregnier/design-youtube/api/gen/api"
 )
 
 var uploadOps = map[string]bool{

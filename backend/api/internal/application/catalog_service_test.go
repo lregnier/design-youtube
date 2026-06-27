@@ -12,7 +12,7 @@ import (
 
 	"github.com/lregnier/design-youtube/api/internal/application"
 	"github.com/lregnier/design-youtube/api/internal/domain/video"
-	"github.com/lregnier/design-youtube/api/internal/gen/mocks"
+	"github.com/lregnier/design-youtube/api/gen/mocks"
 )
 
 func TestCatalogService_GetVideo_CacheHit(t *testing.T) {

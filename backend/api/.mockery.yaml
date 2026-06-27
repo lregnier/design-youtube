@@ -3,7 +3,7 @@ disable-version-string: true
 with-expecter: true
 issue-845-fix: true
 outpkg: mocks
-dir: internal/gen/mocks
+dir: gen/mocks
 packages:
   github.com/lregnier/design-youtube/api/internal/domain/video:
     interfaces:
