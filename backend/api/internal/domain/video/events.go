@@ -10,3 +10,14 @@ type VideoUploadedEvent struct {
 }
 
 func (VideoUploadedEvent) domainEvent() {}
+
+type VideoProcessingSucceededEvent struct {
+	VideoID      string
+	ManifestURL  string
+	ThumbnailURL string
+}
+
+type VideoProcessingFailedEvent struct {
+	VideoID string
+	Reason  string
+}

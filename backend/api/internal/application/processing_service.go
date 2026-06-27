@@ -8,8 +8,8 @@ import (
 )
 
 type ProcessingService interface {
-	OnProcessed(ctx context.Context, evt VideoProcessedEvent) error
-	OnFailed(ctx context.Context, evt VideoFailedEvent) error
+	HandleVideoProcessingSucceeded(ctx context.Context, evt video.VideoProcessingSucceededEvent) error
+	HandleVideoProcessingFailed(ctx context.Context, evt video.VideoProcessingFailedEvent) error
 }
 
 var _ ProcessingService = (*processingService)(nil)
@@ -22,7 +22,7 @@ func NewProcessingService(repo video.VideoRepository) ProcessingService {
 	return &processingService{repo: repo}
 }
 
-func (s *processingService) OnProcessed(ctx context.Context, evt VideoProcessedEvent) error {
+func (s *processingService) HandleVideoProcessingSucceeded(ctx context.Context, evt video.VideoProcessingSucceededEvent) error {
 	if evt.VideoID == "" {
 		return errors.New("videoId is required")
 	}
@@ -37,7 +37,7 @@ func (s *processingService) OnProcessed(ctx context.Context, evt VideoProcessedE
 	return s.repo.Save(ctx, vid)
 }
 
-func (s *processingService) OnFailed(ctx context.Context, evt VideoFailedEvent) error {
+func (s *processingService) HandleVideoProcessingFailed(ctx context.Context, evt video.VideoProcessingFailedEvent) error {
 	if evt.VideoID == "" {
 		return errors.New("videoId is required")
 	}

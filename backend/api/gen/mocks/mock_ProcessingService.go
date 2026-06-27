@@ -5,8 +5,7 @@ package mocks
 import (
 	context "context"
 
-	application "github.com/lregnier/design-youtube/api/internal/application"
-
+	video "github.com/lregnier/design-youtube/api/internal/domain/video"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,16 +22,16 @@ func (_m *MockProcessingService) EXPECT() *MockProcessingService_Expecter {
 	return &MockProcessingService_Expecter{mock: &_m.Mock}
 }
 
-// OnFailed provides a mock function with given fields: ctx, evt
-func (_m *MockProcessingService) OnFailed(ctx context.Context, evt application.VideoFailedEvent) error {
+// HandleVideoProcessingFailed provides a mock function with given fields: ctx, evt
+func (_m *MockProcessingService) HandleVideoProcessingFailed(ctx context.Context, evt video.VideoProcessingFailedEvent) error {
 	ret := _m.Called(ctx, evt)
 
 	if len(ret) == 0 {
-		panic("no return value specified for OnFailed")
+		panic("no return value specified for HandleVideoProcessingFailed")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, application.VideoFailedEvent) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, video.VideoProcessingFailedEvent) error); ok {
 		r0 = rf(ctx, evt)
 	} else {
 		r0 = ret.Error(0)
@@ -41,45 +40,45 @@ func (_m *MockProcessingService) OnFailed(ctx context.Context, evt application.V
 	return r0
 }
 
-// MockProcessingService_OnFailed_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OnFailed'
-type MockProcessingService_OnFailed_Call struct {
+// MockProcessingService_HandleVideoProcessingFailed_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'HandleVideoProcessingFailed'
+type MockProcessingService_HandleVideoProcessingFailed_Call struct {
 	*mock.Call
 }
 
-// OnFailed is a helper method to define mock.On call
+// HandleVideoProcessingFailed is a helper method to define mock.On call
 //   - ctx context.Context
-//   - evt application.VideoFailedEvent
-func (_e *MockProcessingService_Expecter) OnFailed(ctx interface{}, evt interface{}) *MockProcessingService_OnFailed_Call {
-	return &MockProcessingService_OnFailed_Call{Call: _e.mock.On("OnFailed", ctx, evt)}
+//   - evt video.VideoProcessingFailedEvent
+func (_e *MockProcessingService_Expecter) HandleVideoProcessingFailed(ctx interface{}, evt interface{}) *MockProcessingService_HandleVideoProcessingFailed_Call {
+	return &MockProcessingService_HandleVideoProcessingFailed_Call{Call: _e.mock.On("HandleVideoProcessingFailed", ctx, evt)}
 }
 
-func (_c *MockProcessingService_OnFailed_Call) Run(run func(ctx context.Context, evt application.VideoFailedEvent)) *MockProcessingService_OnFailed_Call {
+func (_c *MockProcessingService_HandleVideoProcessingFailed_Call) Run(run func(ctx context.Context, evt video.VideoProcessingFailedEvent)) *MockProcessingService_HandleVideoProcessingFailed_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(application.VideoFailedEvent))
+		run(args[0].(context.Context), args[1].(video.VideoProcessingFailedEvent))
 	})
 	return _c
 }
 
-func (_c *MockProcessingService_OnFailed_Call) Return(_a0 error) *MockProcessingService_OnFailed_Call {
+func (_c *MockProcessingService_HandleVideoProcessingFailed_Call) Return(_a0 error) *MockProcessingService_HandleVideoProcessingFailed_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *MockProcessingService_OnFailed_Call) RunAndReturn(run func(context.Context, application.VideoFailedEvent) error) *MockProcessingService_OnFailed_Call {
+func (_c *MockProcessingService_HandleVideoProcessingFailed_Call) RunAndReturn(run func(context.Context, video.VideoProcessingFailedEvent) error) *MockProcessingService_HandleVideoProcessingFailed_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// OnProcessed provides a mock function with given fields: ctx, evt
-func (_m *MockProcessingService) OnProcessed(ctx context.Context, evt application.VideoProcessedEvent) error {
+// HandleVideoProcessingSucceeded provides a mock function with given fields: ctx, evt
+func (_m *MockProcessingService) HandleVideoProcessingSucceeded(ctx context.Context, evt video.VideoProcessingSucceededEvent) error {
 	ret := _m.Called(ctx, evt)
 
 	if len(ret) == 0 {
-		panic("no return value specified for OnProcessed")
+		panic("no return value specified for HandleVideoProcessingSucceeded")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, application.VideoProcessedEvent) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, video.VideoProcessingSucceededEvent) error); ok {
 		r0 = rf(ctx, evt)
 	} else {
 		r0 = ret.Error(0)
@@ -88,31 +87,31 @@ func (_m *MockProcessingService) OnProcessed(ctx context.Context, evt applicatio
 	return r0
 }
 
-// MockProcessingService_OnProcessed_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OnProcessed'
-type MockProcessingService_OnProcessed_Call struct {
+// MockProcessingService_HandleVideoProcessingSucceeded_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'HandleVideoProcessingSucceeded'
+type MockProcessingService_HandleVideoProcessingSucceeded_Call struct {
 	*mock.Call
 }
 
-// OnProcessed is a helper method to define mock.On call
+// HandleVideoProcessingSucceeded is a helper method to define mock.On call
 //   - ctx context.Context
-//   - evt application.VideoProcessedEvent
-func (_e *MockProcessingService_Expecter) OnProcessed(ctx interface{}, evt interface{}) *MockProcessingService_OnProcessed_Call {
-	return &MockProcessingService_OnProcessed_Call{Call: _e.mock.On("OnProcessed", ctx, evt)}
+//   - evt video.VideoProcessingSucceededEvent
+func (_e *MockProcessingService_Expecter) HandleVideoProcessingSucceeded(ctx interface{}, evt interface{}) *MockProcessingService_HandleVideoProcessingSucceeded_Call {
+	return &MockProcessingService_HandleVideoProcessingSucceeded_Call{Call: _e.mock.On("HandleVideoProcessingSucceeded", ctx, evt)}
 }
 
-func (_c *MockProcessingService_OnProcessed_Call) Run(run func(ctx context.Context, evt application.VideoProcessedEvent)) *MockProcessingService_OnProcessed_Call {
+func (_c *MockProcessingService_HandleVideoProcessingSucceeded_Call) Run(run func(ctx context.Context, evt video.VideoProcessingSucceededEvent)) *MockProcessingService_HandleVideoProcessingSucceeded_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(application.VideoProcessedEvent))
+		run(args[0].(context.Context), args[1].(video.VideoProcessingSucceededEvent))
 	})
 	return _c
 }
 
-func (_c *MockProcessingService_OnProcessed_Call) Return(_a0 error) *MockProcessingService_OnProcessed_Call {
+func (_c *MockProcessingService_HandleVideoProcessingSucceeded_Call) Return(_a0 error) *MockProcessingService_HandleVideoProcessingSucceeded_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *MockProcessingService_OnProcessed_Call) RunAndReturn(run func(context.Context, application.VideoProcessedEvent) error) *MockProcessingService_OnProcessed_Call {
+func (_c *MockProcessingService_HandleVideoProcessingSucceeded_Call) RunAndReturn(run func(context.Context, video.VideoProcessingSucceededEvent) error) *MockProcessingService_HandleVideoProcessingSucceeded_Call {
 	_c.Call.Return(run)
 	return _c
 }

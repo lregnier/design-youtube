@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 
 	"github.com/lregnier/design-youtube/api/internal/application"
+	"github.com/lregnier/design-youtube/api/internal/domain/video"
 )
 
 type Subscriber struct {
@@ -63,6 +64,17 @@ type envelope struct {
 	EventType string `json:"eventType"`
 }
 
+type videoProcessedMessage struct {
+	VideoID      string `json:"videoId"`
+	ManifestURL  string `json:"manifestUrl"`
+	ThumbnailURL string `json:"thumbnailUrl"`
+}
+
+type videoFailedMessage struct {
+	VideoID string `json:"videoId"`
+	Reason  string `json:"reason"`
+}
+
 func (s *Subscriber) handle(ctx context.Context, body *string) error {
 	var env envelope
 	if err := json.Unmarshal([]byte(*body), &env); err != nil {
@@ -71,18 +83,25 @@ func (s *Subscriber) handle(ctx context.Context, body *string) error {
 
 	switch env.EventType {
 	case "VideoProcessed":
-		var evt application.VideoProcessedEvent
-		if err := json.Unmarshal([]byte(*body), &evt); err != nil {
+		var msg videoProcessedMessage
+		if err := json.Unmarshal([]byte(*body), &msg); err != nil {
 			return err
 		}
-		return s.svc.OnProcessed(ctx, evt)
+		return s.svc.HandleVideoProcessingSucceeded(ctx, video.VideoProcessingSucceededEvent{
+			VideoID:      msg.VideoID,
+			ManifestURL:  msg.ManifestURL,
+			ThumbnailURL: msg.ThumbnailURL,
+		})
 
 	case "VideoFailed":
-		var evt application.VideoFailedEvent
-		if err := json.Unmarshal([]byte(*body), &evt); err != nil {
+		var msg videoFailedMessage
+		if err := json.Unmarshal([]byte(*body), &msg); err != nil {
 			return err
 		}
-		return s.svc.OnFailed(ctx, evt)
+		return s.svc.HandleVideoProcessingFailed(ctx, video.VideoProcessingFailedEvent{
+			VideoID: msg.VideoID,
+			Reason:  msg.Reason,
+		})
 
 	default:
 		log.Printf("results subscriber: unknown eventType %q, skipping", env.EventType)
