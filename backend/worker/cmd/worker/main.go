@@ -30,9 +30,22 @@ func main() {
 	}
 
 	// Outbound adapters
-	s3Opts := []func(*awss3.Options){}
+	store := newStore(cfg, awsCfg)
+	transcoder := ffmpeg.NewTranscoder()
+	publisher := newPublisher(cfg, awsCfg)
+
+	// Use case
+	svc := application.NewVideoProcessingService(store, transcoder, publisher)
+
+	// Inbound adapter
+	subscriber := sqssubscriber.NewSubscriber(newSQSClient(cfg, awsCfg), cfg.SQSQueueURL, svc, publisher)
+	subscriber.Start(context.Background())
+}
+
+func newStore(cfg *Config, awsCfg aws.Config) application.VideoStorage {
+	opts := []func(*awss3.Options){}
 	if cfg.S3Endpoint != "" {
-		s3Opts = append(s3Opts, func(o *awss3.Options) {
+		opts = append(opts, func(o *awss3.Options) {
 			o.BaseEndpoint = aws.String(cfg.S3Endpoint)
 			o.UsePathStyle = true
 		})
@@ -43,22 +56,19 @@ func main() {
 	} else {
 		urlBuilder = s3storage.NewCloudFrontURLBuilder(cfg.CloudFrontDomain)
 	}
-	store := s3storage.NewStore(awss3.NewFromConfig(awsCfg, s3Opts...), cfg.S3Bucket, urlBuilder)
+	return s3storage.NewStore(awss3.NewFromConfig(awsCfg, opts...), cfg.S3Bucket, urlBuilder)
+}
 
-	transcoder := ffmpeg.NewTranscoder()
-
-	sqsOpts := []func(*sqs.Options){}
+func newSQSClient(cfg *Config, awsCfg aws.Config) *sqs.Client {
+	opts := []func(*sqs.Options){}
 	if cfg.SQSEndpoint != "" {
-		sqsOpts = append(sqsOpts, func(o *sqs.Options) {
+		opts = append(opts, func(o *sqs.Options) {
 			o.BaseEndpoint = aws.String(cfg.SQSEndpoint)
 		})
 	}
-	publisher := sqspublisher.NewPublisher(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.ResultsQueueURL)
+	return sqs.NewFromConfig(awsCfg, opts...)
+}
 
-	// Use case
-	svc := application.NewVideoProcessingService(store, transcoder, publisher)
-
-	// Inbound adapter
-	subscriber := sqssubscriber.NewSubscriber(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.SQSQueueURL, svc, publisher)
-	subscriber.Start(context.Background())
+func newPublisher(cfg *Config, awsCfg aws.Config) application.EventPublisher {
+	return sqspublisher.NewPublisher(newSQSClient(cfg, awsCfg), cfg.ResultsQueueURL)
 }
