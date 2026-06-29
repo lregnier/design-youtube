@@ -15,10 +15,10 @@ import (
 type Subscriber struct {
 	sqsClient *sqs.Client
 	queueURL  string
-	svc       application.ProcessingService
+	svc       application.VideoStatusService
 }
 
-func NewSubscriber(sqsClient *sqs.Client, queueURL string, svc application.ProcessingService) *Subscriber {
+func NewSubscriber(sqsClient *sqs.Client, queueURL string, svc application.VideoStatusService) *Subscriber {
 	return &Subscriber{sqsClient: sqsClient, queueURL: queueURL, svc: svc}
 }
 
@@ -87,7 +87,7 @@ func (s *Subscriber) handle(ctx context.Context, body *string) error {
 		if err := json.Unmarshal([]byte(*body), &msg); err != nil {
 			return err
 		}
-		return s.svc.HandleVideoProcessingSucceeded(ctx, video.VideoProcessingSucceededEvent{
+		return s.svc.MarkReady(ctx, video.VideoProcessingSucceededEvent{
 			VideoID:      msg.VideoID,
 			ManifestURL:  msg.ManifestURL,
 			ThumbnailURL: msg.ThumbnailURL,
@@ -98,7 +98,7 @@ func (s *Subscriber) handle(ctx context.Context, body *string) error {
 		if err := json.Unmarshal([]byte(*body), &msg); err != nil {
 			return err
 		}
-		return s.svc.HandleVideoProcessingFailed(ctx, video.VideoProcessingFailedEvent{
+		return s.svc.MarkFailed(ctx, video.VideoProcessingFailedEvent{
 			VideoID: msg.VideoID,
 			Reason:  msg.Reason,
 		})

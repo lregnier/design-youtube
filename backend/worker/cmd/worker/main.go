@@ -56,9 +56,9 @@ func main() {
 	publisher := sqspublisher.NewPublisher(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.ResultsQueueURL)
 
 	// Use case
-	processVideo := application.NewProcessVideo(store, transcoder, publisher)
+	svc := application.NewVideoProcessingService(store, transcoder, publisher)
 
 	// Inbound adapter
-	subscriber := sqssubscriber.NewSubscriber(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.SQSQueueURL, processVideo, publisher)
+	subscriber := sqssubscriber.NewSubscriber(sqs.NewFromConfig(awsCfg, sqsOpts...), cfg.SQSQueueURL, svc, publisher)
 	subscriber.Start(context.Background())
 }

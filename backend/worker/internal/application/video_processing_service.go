@@ -15,23 +15,23 @@ var qualities = []struct{ name, scale, bitrate string }{
 	{"360p", "640:360", "800k"},
 }
 
-type ProcessVideo interface {
-	Execute(ctx context.Context, job processing.ProcessingJob) error
+type VideoProcessingService interface {
+	Process(ctx context.Context, job processing.ProcessingJob) error
 }
 
-var _ ProcessVideo = (*processVideo)(nil)
+var _ VideoProcessingService = (*videoProcessingService)(nil)
 
-type processVideo struct {
+type videoProcessingService struct {
 	storage    VideoStorage
 	transcoder Transcoder
 	publisher  EventPublisher
 }
 
-func NewProcessVideo(storage VideoStorage, transcoder Transcoder, publisher EventPublisher) ProcessVideo {
-	return &processVideo{storage: storage, transcoder: transcoder, publisher: publisher}
+func NewVideoProcessingService(storage VideoStorage, transcoder Transcoder, publisher EventPublisher) VideoProcessingService {
+	return &videoProcessingService{storage: storage, transcoder: transcoder, publisher: publisher}
 }
 
-func (uc *processVideo) Execute(ctx context.Context, job processing.ProcessingJob) error {
+func (uc *videoProcessingService) Process(ctx context.Context, job processing.ProcessingJob) error {
 	log.Printf("processing videoId=%s", job.VideoID)
 
 	tmpDir, err := os.MkdirTemp("", "video-"+job.VideoID+"-*")

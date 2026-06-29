@@ -18,14 +18,14 @@ import (
 const maxReceiveCount = 3
 
 type Subscriber struct {
-	sqsClient    *sqs.Client
-	queueURL     string
-	processVideo application.ProcessVideo
-	publisher    application.EventPublisher
+	sqsClient  *sqs.Client
+	queueURL   string
+	svc        application.VideoProcessingService
+	publisher  application.EventPublisher
 }
 
-func NewSubscriber(sqsClient *sqs.Client, queueURL string, pv application.ProcessVideo, publisher application.EventPublisher) *Subscriber {
-	return &Subscriber{sqsClient: sqsClient, queueURL: queueURL, processVideo: pv, publisher: publisher}
+func NewSubscriber(sqsClient *sqs.Client, queueURL string, svc application.VideoProcessingService, publisher application.EventPublisher) *Subscriber {
+	return &Subscriber{sqsClient: sqsClient, queueURL: queueURL, svc: svc, publisher: publisher}
 }
 
 func (s *Subscriber) Start(ctx context.Context) {
@@ -68,7 +68,7 @@ func (s *Subscriber) poll(ctx context.Context) {
 		heartbeatCtx, stopHeartbeat := context.WithCancel(ctx)
 		go s.startHeartbeat(heartbeatCtx, msg.ReceiptHandle)
 
-		err = s.processVideo.Execute(ctx, job)
+		err = s.svc.Process(ctx, job)
 		stopHeartbeat()
 
 		if err != nil {

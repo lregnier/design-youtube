@@ -8,10 +8,10 @@ The `internal/domain/` package SHALL import only the Go standard library. No AWS
 - **THEN** the build succeeds with no imports outside the standard library
 
 ### Requirement: ProcessVideo use case depends only on port interfaces
-The `ProcessVideo` use case in `internal/application/` SHALL accept `VideoStorage`, `Transcoder`, and `ResultPublisher` as constructor arguments. It SHALL NOT import any adapter package, AWS SDK, or ffmpeg directly.
+The `VideoProcessingService` use case in `internal/application/` SHALL accept `VideoStorage`, `Transcoder`, and `EventPublisher` as constructor arguments. It SHALL NOT import any adapter package, AWS SDK, or ffmpeg directly.
 
 #### Scenario: Use case is constructable with mock implementations
-- **WHEN** `ProcessVideo` is instantiated with stub implementations of its three port interfaces
+- **WHEN** `VideoProcessingService` is instantiated with stub implementations of its three port interfaces
 - **THEN** it compiles and can be called without any real infrastructure present
 
 ### Requirement: Transcoder port abstracts all ffmpeg interactions

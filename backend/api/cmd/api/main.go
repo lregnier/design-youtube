@@ -70,7 +70,7 @@ func main() {
 	// Application services
 	uploadSvc := application.NewUploadService(repo, store, publisher, cfg.S3Bucket)
 	catalogSvc := application.NewCatalogService(repo, cache)
-	processingSvc := application.NewProcessingService(repo)
+	processingSvc := application.NewVideoStatusService(repo)
 
 	// Infrastructure — inbound
 	h := httpadapter.NewHandler(uploadSvc, catalogSvc)

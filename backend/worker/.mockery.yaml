@@ -10,4 +10,4 @@ packages:
       VideoStorage:
       Transcoder:
       EventPublisher:
-      ProcessVideo:
+      VideoProcessingService:

@@ -16,7 +16,7 @@ graph LR
     subgraph App["Application"]
         Upload["upload\n· InitUpload\n· ConfirmChunk\n· CompleteUpload"]
         Catalog["catalog\n· GetVideo\n· ListVideos"]
-        Processing["processing\n· HandleVideoProcessingSucceeded\n· HandleVideoProcessingFailed"]
+        Processing["video-status\n· MarkReady\n· MarkFailed"]
     end
 
     subgraph Outbound["Outbound adapters"]
@@ -125,8 +125,8 @@ sequenceDiagram
 stateDiagram-v2
     [*] --> uploading: InitUpload
     uploading --> processing: CompleteUpload
-    processing --> ready: ApplyResult (success)
-    processing --> failed: ApplyResult (failure)
+    processing --> ready: MarkReady
+    processing --> failed: MarkFailed
     ready --> [*]
     failed --> [*]
 ```

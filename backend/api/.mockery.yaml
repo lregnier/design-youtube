@@ -15,4 +15,4 @@ packages:
       Cache:
       UploadService:
       CatalogService:
-      ProcessingService:
+      VideoStatusService:

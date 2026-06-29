@@ -13,7 +13,7 @@ graph LR
     end
 
     subgraph App["Application"]
-        PV["ProcessVideo"]
+        VPS["VideoProcessingService\n· Process"]
     end
 
     subgraph Outbound["Outbound adapters"]
@@ -22,10 +22,10 @@ graph LR
         SQSOut["SQS\n(EventPublisher)"]
     end
 
-    SQSIn --> PV
-    PV --> S3
-    PV --> FFmpeg
-    PV --> SQSOut
+    SQSIn --> VPS
+    VPS --> S3
+    VPS --> FFmpeg
+    VPS --> SQSOut
 ```
 
 ## Processing Pipeline

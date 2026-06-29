@@ -7,22 +7,22 @@ import (
 	"github.com/lregnier/design-youtube/api/internal/domain/video"
 )
 
-type ProcessingService interface {
-	HandleVideoProcessingSucceeded(ctx context.Context, evt video.VideoProcessingSucceededEvent) error
-	HandleVideoProcessingFailed(ctx context.Context, evt video.VideoProcessingFailedEvent) error
+type VideoStatusService interface {
+	MarkReady(ctx context.Context, evt video.VideoProcessingSucceededEvent) error
+	MarkFailed(ctx context.Context, evt video.VideoProcessingFailedEvent) error
 }
 
-var _ ProcessingService = (*processingService)(nil)
+var _ VideoStatusService = (*videoStatusService)(nil)
 
-type processingService struct {
+type videoStatusService struct {
 	repo video.VideoRepository
 }
 
-func NewProcessingService(repo video.VideoRepository) ProcessingService {
-	return &processingService{repo: repo}
+func NewVideoStatusService(repo video.VideoRepository) VideoStatusService {
+	return &videoStatusService{repo: repo}
 }
 
-func (s *processingService) HandleVideoProcessingSucceeded(ctx context.Context, evt video.VideoProcessingSucceededEvent) error {
+func (s *videoStatusService) MarkReady(ctx context.Context, evt video.VideoProcessingSucceededEvent) error {
 	if evt.VideoID == "" {
 		return errors.New("videoId is required")
 	}
@@ -37,7 +37,7 @@ func (s *processingService) HandleVideoProcessingSucceeded(ctx context.Context, 
 	return s.repo.Save(ctx, vid)
 }
 
-func (s *processingService) HandleVideoProcessingFailed(ctx context.Context, evt video.VideoProcessingFailedEvent) error {
+func (s *videoStatusService) MarkFailed(ctx context.Context, evt video.VideoProcessingFailedEvent) error {
 	if evt.VideoID == "" {
 		return errors.New("videoId is required")
 	}
