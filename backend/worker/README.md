@@ -9,7 +9,7 @@ Built with Go using hexagonal (ports and adapters) architecture.
 ```mermaid
 graph LR
     subgraph Inbound["Inbound adapter"]
-        SQSIn["SQS consumer\n(video-processing.fifo)"]
+        SQSIn["SQS subscriber\n(video-processing.fifo)"]
     end
 
     subgraph App["Application"]
@@ -19,7 +19,7 @@ graph LR
     subgraph Outbound["Outbound adapters"]
         S3["S3\n(VideoStorage)"]
         FFmpeg["FFmpeg\n(Transcoder)"]
-        SQSOut["SQS\n(ResultPublisher)"]
+        SQSOut["SQS\n(EventPublisher)"]
     end
 
     SQSIn --> PV
@@ -50,9 +50,9 @@ sequenceDiagram
     W->>S3: UploadManifest (HLS master playlist)
     W->>FF: ExtractThumbnail (frame at duration/2)
     W->>S3: UploadThumbnail
-    W->>R: PublishProcessed {videoId, manifestUrl, thumbnailUrl}
+    W->>R: Publish(VideoProcessingSucceededEvent)
 
-    Note over W,R: On any failure, PublishFailed is sent instead
+    Note over W,R: On any failure, Publish(VideoProcessingFailedEvent) is sent instead
 ```
 
 ## Output Qualities

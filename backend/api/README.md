@@ -10,20 +10,20 @@ Built with Go using hexagonal (ports and adapters) architecture. HTTP routes are
 graph LR
     subgraph Inbound["Inbound adapters"]
         HTTP["HTTP handler\n(chi router)"]
-        SQSIn["SQS consumer\n(results queue)"]
+        SQSIn["SQS subscriber\n(results queue)"]
     end
 
     subgraph App["Application"]
         Upload["upload\n· InitUpload\n· ConfirmChunk\n· CompleteUpload"]
         Catalog["catalog\n· GetVideo\n· ListVideos"]
-        Processing["processing\n· ApplyResult"]
+        Processing["processing\n· HandleVideoProcessingSucceeded\n· HandleVideoProcessingFailed"]
     end
 
     subgraph Outbound["Outbound adapters"]
         DynDB["DynamoDB\n(VideoRepository)"]
         S3["S3\n(ObjectStore)"]
         Redis["Redis\n(Cache)"]
-        SQSOut["SQS\n(Queue, processing jobs)"]
+        SQSOut["SQS\n(EventPublisher)"]
     end
 
     HTTP --> Upload
