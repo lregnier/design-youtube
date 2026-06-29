@@ -20,6 +20,7 @@ infra/aws/override.tf.json
 
 # AI agent workspaces (tool-specific, not part of the project)
 .claude/
+.agents/
 CLAUDE.md
 
 # OS / editor
