@@ -61,6 +61,10 @@ docker compose up --build
 
 AWS services are emulated locally by purpose-built containers: [MinIO](https://min.io/) for S3, [DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html) for DynamoDB, and [ElasticMQ](https://github.com/softwaremill/elasticmq) for SQS. The upload secret for protected endpoints is `devsecret`.
 
+## Development Workflow
+
+Changes are tracked using [OpenSpec](https://github.com/lukemorales/openspec), a spec-driven workflow that produces a proposal, design, and task list before any code is written. Change artifacts live in [`openspec/changes/`](openspec/changes/) and are archived after implementation.
+
 ## CI/CD
 
 GitHub Actions runs on every push:
