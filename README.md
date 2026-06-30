@@ -56,6 +56,7 @@ docker compose up --build
 | MinIO console | http://localhost:9001 |
 | DynamoDB Local | http://localhost:8000 |
 | ElasticMQ (SQS) | http://localhost:9324 |
+| ElasticMQ UI | http://localhost:9325 |
 | Redis | localhost:6379 |
 
 AWS services are emulated locally by purpose-built containers: [MinIO](https://min.io/) for S3, [DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html) for DynamoDB, and [ElasticMQ](https://github.com/softwaremill/elasticmq) for SQS. The upload secret for protected endpoints is `devsecret`.

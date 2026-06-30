@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   api:
     build:
@@ -144,6 +142,19 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
+
+  elasticmq-ui:
+    image: softwaremill/elasticmq-ui
+    ports:
+      - "9325:3000"
+    environment:
+      SQS_ENDPOINT: http://elasticmq:9324
+      AWS_REGION: elasticmq
+      AWS_ACCESS_KEY_ID: x
+      AWS_SECRET_ACCESS_KEY: x
+    depends_on:
+      elasticmq:
+        condition: service_healthy
 
 volumes:
   redis-data:
